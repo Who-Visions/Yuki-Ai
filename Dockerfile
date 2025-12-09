@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all application code
 # We copy everything in the root that handles logic
-COPY *.py .
+COPY *.py ./
 
 # Create start script
 RUN echo "#!/bin/bash" > /app/start.sh && \
