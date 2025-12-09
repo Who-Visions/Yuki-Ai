@@ -261,7 +261,12 @@ async def list_models():
         "object": "list",
         "data": [
             {"id": "yuki", "object": "model", "created": int(time.time()), "owned_by": "yuki-org"},
-            {"id": "gemini-2.5-pro", "object": "model", "created": int(time.time()), "owned_by": "google"}
+            {"id": "gemini-3-pro-preview", "object": "model", "created": int(time.time()), "owned_by": "google"},
+            {"id": "gemini-2.5-pro", "object": "model", "created": int(time.time()), "owned_by": "google"},
+            {"id": "gemini-2.5-flash", "object": "model", "created": int(time.time()), "owned_by": "google"},
+            {"id": "gemini-2.5-flash-lite", "object": "model", "created": int(time.time()), "owned_by": "google"},
+            {"id": "gemini-3-pro-image-preview", "object": "model", "created": int(time.time()), "owned_by": "google"},
+            {"id": "gemini-2.5-flash-image", "object": "model", "created": int(time.time()), "owned_by": "google"}
         ]
     }
 
@@ -288,7 +293,7 @@ async def chat_completions(request: ChatCompletionRequest):
              gemini_contents.append(types.Content(role="model", parts=parts))
 
     # 2. Config
-    model_name = "gemini-2.5-pro-preview-0219"
+    model_name = "gemini-2.5-pro"
     if "gemini" in request.model:
         model_name = request.model
     
