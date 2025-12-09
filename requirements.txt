@@ -1,0 +1,9 @@
+cloudpickle
+langchain-core
+langchain
+langchain-google-vertexai
+langgraph
+google-cloud-aiplatform
+google-cloud-vertexai
+google-auth
+google-cloud-secret-manager

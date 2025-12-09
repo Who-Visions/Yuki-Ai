@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "database_info": {
+    "name": "Yuki Anime Character Database",
+    "description": "Comprehensive anime character database for Face Math & Cosplay Generation",
+    "created": "2025-12-02",
+    "last_updated": "2025-12-02"
+  },
+  "sources": {
+    "myanimelist": {
+      "url": "https://myanimelist.net/topanime.php",
+      "type": "ranking",
+      "priority": 1
+    },
+    "animenewsnetwork": {
+      "url": "https://www.animenewsnetwork.com/encyclopedia/ratings-anime.php?top50=popular&n=250",
+      "type": "popularity",
+      "priority": 2
+    },
+    "imdb": {
+      "url": "https://www.imdb.com/list/ls088526366/",
+      "type": "western_rating",
+      "priority": 3
+    }
+  },
+  "anime": [],
+  "example_anime_entry": {
+    "id": "unique_anime_id",
+    "title": {
+      "english": "Fullmetal Alchemist: Brotherhood",
+      "romaji": "Hagane no Renkinjutsushi: Fullmetal Alchemist",
+      "native": "鋼の錬金術師 FULLMETAL ALCHEMIST"
+    },
+    "metadata": {
+      "year": 2009,
+      "type": "TV",
+      "episodes": 64,
+      "status": "Finished Airing",
+      "genres": ["Action", "Adventure", "Drama", "Fantasy"],
+      "studio": "Bones"
+    },
+    "rankings": {
+      "myanimelist": {
+        "rank": 1,
+        "score": 9.1,
+        "popularity": 3,
+        "members": 3500000
+      },
+      "animenewsnetwork": {
+        "popularity_rank": 21,
+        "rating": "Excellent"
+      }
+    },
+    "characters": [],
+    "example_character_entry": {
+      "id": "unique_character_id",
+      "name": {
+        "full": "Edward Elric",
+        "given": "Edward",
+        "family": "Elric",
+        "aliases": ["Fullmetal Alchemist", "Ed"]
+      },
+      "role": "Main",
+      "metadata": {
+        "age": 15,
+        "gender": "Male",
+        "height": "165cm",
+        "hair_color": "Blonde",
+        "eye_color": "Gold"
+      },
+      "face_schema": {
+        "extracted": false,
+        "schema_path": null,
+        "reference_images": []
+      },
+      "cosplay_generations": {
+        "count": 0,
+        "outputs": []
+      },
+      "popularity": {
+        "favorites": 125000,
+        "rank": 5
+      }
+    }
+  }
+}

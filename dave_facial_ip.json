@@ -1,0 +1,117 @@
+{
+  "profile": {
+    "name": "Dave",
+    "role": "Default Black Male Template",
+    "platform": "Yuki DNA-Authentic Cosplay"
+  },
+  "demographics": {
+    "ethnicity": "Black/African American",
+    "gender": "Male",
+    "age_range": "35-45",
+    "fitzpatrick": "V-VI",
+    "undertone": "warm"
+  },
+  "bone_structure": {
+    "face_shape": "oblong/rectangular",
+    "jawline": "strong, defined, square-ish angle",
+    "cheekbones": "moderately prominent, set relatively high",
+    "chin": "square-ish, moderately projected",
+    "forehead": "medium height, slightly rounded, visible horizontal lines when raised"
+  },
+  "nose": {
+    "bridge": "broad at base, straight to slightly convex profile, medium height",
+    "tip": "rounded, slightly bulbous",
+    "width": "broad overall",
+    "nostrils": "flared, rounded, visible from front",
+    "piercings": "none"
+  },
+  "lips": {
+    "fullness": "moderately full",
+    "upper": "defined M-shape, moderately full, slightly thinner than lower",
+    "lower": "fuller than upper, rounded",
+    "width": "average, proportional to face",
+    "cupids_bow": "defined"
+  },
+  "eyes": {
+    "shape": "almond, slightly downturned at outer corners",
+    "size": "medium to large",
+    "spacing": "average",
+    "color": "dark brown",
+    "eyelids": "partially hooded upper lid with visible crease"
+  },
+  "eyebrows": {
+    "shape": "relatively straight with subtle arch, well-defined",
+    "thickness": "medium to thick",
+    "arch": "subtle, peaking slightly past outer third"
+  },
+  "hair": {
+    "texture": "coily/kinky",
+    "style": "long dreadlocks/locs, extending past shoulders",
+    "hairline": "receding at temples, M-shaped, generally rounded across forehead",
+    "facial_hair": "full beard, medium length, well-groomed with significant graying, especially under chin and around mouth"
+  },
+  "skin": {
+    "tone": "deep brown, consistent",
+    "texture": "smooth with visible pores, some minor blemishes/unevenness",
+    "notable_marks": "small scar on left cheek, minor hyperpigmentation around mouth/chin"
+  },
+  "distinctive_features": [
+    "long dreadlocks",
+    "prominent graying in beard",
+    "slightly downturned almond eyes",
+    "small scar on left cheek",
+    "broad nose with rounded, slightly bulbous tip"
+  ],
+  "identity_priorities": [
+    "1. Dreadlocks (length, texture, style)",
+    "2. Deep brown skin tone and warm undertone",
+    "3. Broad nose shape (bridge, tip, width)",
+    "4. Jawline and overall oblong/rectangular face shape",
+    "5. Graying in facial hair"
+  ],
+  "generation_rules": {
+    "must_preserve": [
+      "dreadlocks (length, texture)",
+      "deep brown skin tone",
+      "broad nose structure",
+      "almond eye shape",
+      "jawline definition",
+      "graying in beard"
+    ],
+    "can_modify": [
+      "facial hair length (while maintaining graying)",
+      "minor skin texture details",
+      "expression",
+      "hairline (slight variations)",
+      "eyebrow thickness (within natural range)"
+    ],
+    "never_modify": [
+      "ethnicity",
+      "gender",
+      "eye color",
+      "overall face shape category",
+      "presence of dreadlocks"
+    ]
+  },
+  "_metadata": {
+    "created": "2025-12-08T06:02:23.656676",
+    "model": "gemini-2.5-flash",
+    "sources": [
+      "6FD13866-5798-4EFF-B9C9-88BBEB3942B2.jpg",
+      "IMG_3751.jpg",
+      "IMG_4167.jpg",
+      "IMG_6728.jpg",
+      "IMG_6730.jpg",
+      "IMG_6735.jpg",
+      "IMG_6741.jpg",
+      "IMG_7392.jpg",
+      "IMG_7396.jpg",
+      "IMG_7397.jpg",
+      "IMG_7884.jpg",
+      "IMG_7887.jpg",
+      "IMG_7981.jpg",
+      "IMG_7983.jpg"
+    ],
+    "version": "2.0.0"
+  }
+}

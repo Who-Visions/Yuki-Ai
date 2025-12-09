@@ -1,0 +1,25 @@
+{
+  "raw_response": "```json\n{\n    \"profile_metadata\": {\n        \"name\": \"Dave\",\n        \"role\": \"Default Black Male Template\",\n        \"created\": \"2023-10-27\",\n        \"reference_images\": 14,\n        \"platform\": \"Yuki DNA-Authentic Cosplay System\"\n    },\n    \"demographics\": {\n        \"ethnicity\": \"Black/African American\",\n        \"gender\": \"Male\",\n        \"approximate_age_range\": \"35-45\",\n        \"fitzpatrick_scale\": \"VI (Deeply pigmented dark brown skin)\",\n        \"skin_undertone\": \"Warm (golden-olive undertones, reflecting light",
+  "_extraction_metadata": {
+    "extraction_date": "2025-12-08T06:01:13.229077",
+    "model_used": "gemini-2.5-flash",
+    "reference_images": [
+      "6FD13866-5798-4EFF-B9C9-88BBEB3942B2.jpg",
+      "IMG_3751.jpg",
+      "IMG_4167.jpg",
+      "IMG_6728.jpg",
+      "IMG_6730.jpg",
+      "IMG_6735.jpg",
+      "IMG_6741.jpg",
+      "IMG_7392.jpg",
+      "IMG_7396.jpg",
+      "IMG_7397.jpg",
+      "IMG_7884.jpg",
+      "IMG_7887.jpg",
+      "IMG_7981.jpg",
+      "IMG_7983.jpg"
+    ],
+    "extraction_version": "1.0.0",
+    "platform": "Yuki DNA-Authentic Cosplay System"
+  }
+}

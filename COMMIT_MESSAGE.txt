@@ -1,0 +1,9 @@
+Add Yuki Agent deployment
+
+- Deploy Yuki v0.05 as a Vertex AI Reasoning Engine in us-central1
+- Use gemini-3-pro-preview through google-genai with global routing
+- Expose a single query operation via register_operations
+- Add lazy client initialization and structured dict responses for all calls
+- Provide test harness for remote agent verification
+
+Resource: projects/914641083224/locations/us-central1/reasoningEngines/2780528567203659776

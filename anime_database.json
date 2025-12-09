@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-12-02T05:59:49.037526",
+  "anime": {
+    "9019076e51fd": {
+      "id": "9019076e51fd",
+      "title_english": "Fullmetal Alchemist: Brotherhood",
+      "type": "TV",
+      "status": "Finished",
+      "title_romaji": "Hagane no Renkinjutsushi: Fullmetal Alchemist",
+      "title_native": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "year": 2009,
+      "episodes": 64,
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "studio": "Bones",
+      "rankings": {
+        "myanimelist": {
+          "rank": 1,
+          "score": 9.1,
+          "popularity": 3
+        },
+        "animenewsnetwork": null,
+        "imdb": null
+      },
+      "character_ids": [],
+      "poster_url": null
+    }
+  },
+  "characters": {
+    "5ae7e6de3be6": {
+      "id": "5ae7e6de3be6",
+      "name_full": "Edward Elric",
+      "name_given": "Edward",
+      "name_family": "Elric",
+      "anime_id": "9019076e51fd",
+      "role": "Main",
+      "aliases": [
+        "Fullmetal Alchemist",
+        "Ed"
+      ],
+      "gender": "Male",
+      "age": 15,
+      "hair_color": "Blonde",
+      "eye_color": "Gold",
+      "popularity_rank": null,
+      "favorites_count": null,
+      "face_schema": {
+        "extracted": false,
+        "extraction_date": null,
+        "model_used": null,
+        "schema_data": null,
+        "reference_image_hashes": []
+      },
+      "cosplay_generations": [],
+      "reference_images": []
+    }
+  },
+  "indices": {
+    "anime_by_title": {
+      "fullmetal alchemist: brotherhood": "9019076e51fd",
+      "hagane no renkinjutsushi: fullmetal alchemist": "9019076e51fd"
+    },
+    "characters_by_name": {
+      "edward elric": "5ae7e6de3be6"
+    },
+    "characters_by_anime": {
+      "9019076e51fd": [
+        "5ae7e6de3be6"
+      ]
+    },
+    "top_ranked_anime": []
+  },
+  "stats": {
+    "total_anime": 1,
+    "total_characters": 1,
+    "characters_with_face_schemas": 0
+  }
+}

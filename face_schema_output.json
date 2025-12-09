@@ -1,0 +1,75 @@
+{
+  "faces": [
+    {
+      "id": "face_1",
+      "box_2d": [
+        225,
+        375,
+        610,
+        635
+      ],
+      "identity_vector": {
+        "face_width_height_ratio": 0.68,
+        "eye_spacing_ratio": 0.46,
+        "nose_width_ratio": 0.38,
+        "jawline_angle_degrees": 118.0,
+        "chin_prominence": 0.55,
+        "forehead_height_ratio": 0.35
+      },
+      "feature_map": {
+        "eyes": "Dark brown irises, almond shape, heavy upper lids, distinct tear troughs, direct and focused gaze.",
+        "nose": "Broad nose bridge, wide nostrils, rounded tip, slightly downturned columella.",
+        "lips": "Full volume, two-toned pigmentation (darker upper lip, lighter lower lip), distinct cupid's bow, mouth closed.",
+        "skin_texture": "Deep mahogany tone, high melanin, visible pores on cheeks and nose, slight oily sheen on forehead and bridge of nose.",
+        "hair": "Black hair styled in short dreadlocks/twists, visible receding hairline at temples. Facial hair consists of a sparse, unkempt beard and moustache, denser at the chin.",
+        "accessories": "Blue and white fuzzy ear headband, silver chain necklace."
+      },
+      "distinctive_marks": [
+        "Slight hyperpigmentation spot on left cheek",
+        "Vertical furrow lines between eyebrows",
+        "Small indentation/scar on center forehead"
+      ],
+      "expression_weight": {
+        "neutral": 0.85,
+        "sternness": 0.15,
+        "joy": 0.0,
+        "anger": 0.05,
+        "surprise": 0.0
+      }
+    },
+    {
+      "id": "face_2",
+      "box_2d": [
+        255,
+        10,
+        365,
+        145
+      ],
+      "identity_vector": {
+        "face_width_height_ratio": 0.72,
+        "eye_spacing_ratio": 0.44,
+        "nose_width_ratio": 0.32,
+        "jawline_angle_degrees": 125.0,
+        "chin_prominence": 0.45
+      },
+      "feature_map": {
+        "eyes": "Narrowed/squinting, looking downward (likely at phone), dark eyelashes.",
+        "nose": "Medium width, straight bridge.",
+        "lips": "Medium volume, mouth open showing upper teeth, likely speaking.",
+        "skin_texture": "Light brown/tan complexion, smooth texture.",
+        "hair": "Dyed bright magenta/red, straight texture visible under cap.",
+        "accessories": "Black baseball cap with red embroidery."
+      },
+      "distinctive_marks": [
+        "None clearly visible due to resolution and angle"
+      ],
+      "expression_weight": {
+        "neutral": 0.2,
+        "engagement": 0.6,
+        "annoyance": 0.2,
+        "joy": 0.0,
+        "surprise": 0.1
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+
+=== 🚀 YUKI HYBRID GEN (FLASH ANALYSIS + 3 PRO GENERATION) ===
+   ⚡ Gemini 2.5 Flash Online (Analysis)
+   🎨 Gemini 3 Pro Image Preview Online (Generation)
+
+=== 🎯 YUKI HYBRID: DAVE SCENARIO ===
+   📂 Input: C:\Yuki_Local\dave test images
+   📂 Output: real_gen_results_hybrid
+   ⚡ Analysis: gemini-2.5-flash
+   🎨 Generation: gemini-3-pro-image-preview
+
+=== 🎭 Character 1/6: Luffy ===
+   📸 [1/12] 0Y9A3958.png -> Luffy @ Tokyo Comic Con (2k)
+   ⚡ Analyzing DNA features (Flash)...
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/gifted-cooler-479623-r7/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+      ✅ Analysis complete (18.56s)
+      🎨 Generating with gemini-3-pro-image-preview...
+AFC is enabled with max remote calls: 10.

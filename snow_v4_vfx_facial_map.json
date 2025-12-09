@@ -1,0 +1,213 @@
+{
+  "subject_id": "Snow_VFX",
+  "vfx_confidence": "HIGH",
+  "3d_face_topology": {
+    "overall_shape": "oblong",
+    "face_plane_angle": "slightly angled forward",
+    "depth_profile": "average depth",
+    "symmetry_rating": "slight asymmetry",
+    "asymmetry_details": "Right brow sits slightly lower than left in resting state; smile pulls slightly stronger to subject's right side"
+  },
+  "bone_structure_zones": {
+    "forehead_plane": {
+      "shape": "curved",
+      "prominence": "prominent",
+      "surface_area": "large"
+    },
+    "orbital_zones": {
+      "depth": "average",
+      "brow_bone_prominence": "minimal",
+      "under_eye_plane": "slightly hollow"
+    },
+    "cheekbone_planes": {
+      "prominence": "defined",
+      "angle": "high set",
+      "width_contribution": "moderate"
+    },
+    "nose_bridge_projection": {
+      "height": "low",
+      "angle_from_face": "approx 25-30 degrees",
+      "tip_projection": "average"
+    },
+    "maxilla_zone": {
+      "projection": "average",
+      "nasolabial_depth": "moderate"
+    },
+    "mandible_zone": {
+      "jaw_angle": "soft",
+      "width": "average",
+      "definition": "soft"
+    },
+    "chin_projection": {
+      "forward_projection": "average",
+      "shape": "rounded",
+      "vertical_length": "average"
+    }
+  },
+  "facial_anchor_points": {
+    "description": "Key landmarks for tracking/projection alignment",
+    "primary_anchors": [
+      "inner eye corners (canthi)",
+      "nose tip apex",
+      "nostril wings (alar base)",
+      "lip corners (commissures)",
+      "chin point (menton)"
+    ],
+    "secondary_anchors": [
+      "eyebrow peaks",
+      "zygomatic arch high point",
+      "hairline center peak"
+    ],
+    "eye_spacing_ratio": "average",
+    "nose_to_lip_ratio": "average philtrum",
+    "lip_to_chin_ratio": "average"
+  },
+  "surface_characteristics": {
+    "skin_type": {
+      "fitzpatrick": "VI",
+      "tone": "deep brown",
+      "undertone": "cool red",
+      "reflectivity": "dewy/oily shine zones"
+    },
+    "texture_zones": {
+      "forehead": "smooth",
+      "cheeks": "smooth",
+      "nose": "smooth",
+      "chin": "smooth"
+    },
+    "shadow_catch_areas": [
+      "under eye hollows (tear troughs)",
+      "nasolabial folds",
+      "under lower lip",
+      "neck beneath jawline"
+    ],
+    "highlight_areas": [
+      "center forehead (strong specular)",
+      "nose bridge",
+      "nose tip",
+      "upper cheek apples",
+      "chin center"
+    ]
+  },
+  "feature_details": {
+    "eyes": {
+      "shape": "almond",
+      "size_relative": "medium",
+      "color": "dark brown",
+      "lid_visible": "yes",
+      "lash_prominence": "average"
+    },
+    "eyebrows": {
+      "shape": "soft arch",
+      "thickness": "thin",
+      "color": "black",
+      "grooming": "shaped"
+    },
+    "nose": {
+      "bridge_profile": "flat/straight",
+      "tip_type": "rounded/bulbous",
+      "width": "wide",
+      "nostril_visibility": "moderate",
+      "piercings": "left nostril ring"
+    },
+    "lips": {
+      "fullness": "full",
+      "shape": "defined cupid's bow",
+      "cupids_bow": "defined",
+      "color": "two-toned (darker liner/outer, lighter center)"
+    },
+    "jaw_chin": {
+      "jawline_definition": "soft",
+      "chin_shape": "rounded",
+      "profile_angle": "convex"
+    }
+  },
+  "hair_framing": {
+    "texture": "coily/kinky (locs/twists)",
+    "density": "thick",
+    "color": "black with brown tips",
+    "length": "shoulder length",
+    "style": "twists/locs pulled back or hanging loose",
+    "face_framing": "high forehead exposure, hair frames sides of neck",
+    "hairline_shape": "rounded",
+    "parting": "center/slightly off-center"
+  },
+  "piercings_and_marks": {
+    "facial_piercings": [
+      "silver ring, left nostril"
+    ],
+    "ear_piercings": [
+      "dangling earrings visible (lobes)"
+    ],
+    "notable_marks": [
+      "slight hyperpigmentation around mouth/chin area"
+    ],
+    "tattoos_visible": [
+      "red heart/script tattoo on left upper chest/collarbone area"
+    ]
+  },
+  "expression_baseline": {
+    "resting_expression": "neutral/relaxed",
+    "eye_expression": "relaxed",
+    "muscle_tension_areas": "minimal tension in resting state"
+  },
+  "projection_mapping_zones": {
+    "forehead_zone": "Zone 1 - High value target, large smooth surface, high reflectivity",
+    "eye_mask_zone": "Zone 2 - Deep tear troughs create natural shadow boundaries",
+    "cheek_zones": "Zone 3L/3R - High specular highlight on apples",
+    "nose_zone": "Zone 4 - Wide base offers good lateral tracking",
+    "mouth_zone": "Zone 5 - High mobility, teeth visibility needs masking",
+    "jaw_zones": "Zone 6L/6R - Soft transition to neck",
+    "chin_zone": "Zone 7 - Rounded projection surface"
+  },
+  "identity_lock_critical": {
+    "top_5_unique_identifiers": [
+      "1. High, rounded forehead plane",
+      "2. Distinct tear trough depth",
+      "3. Nose width and tip shape",
+      "4. Lip shape and cupid's bow definition",
+      "5. Skin specular response (natural highlight map)"
+    ],
+    "MUST_PRESERVE": [
+      "Nose bridge width",
+      "Eye spacing",
+      "Forehead height",
+      "Chin curvature"
+    ],
+    "CAN_STYLE": [
+      "Hair position",
+      "Lip color",
+      "Jewelry (choker/earrings)",
+      "Eyelash density"
+    ],
+    "NEVER_MODIFY": [
+      "Orbital bone structure",
+      "Maxilla projection",
+      "Skin melanin values",
+      "Philtrum length"
+    ]
+  },
+  "_metadata": {
+    "created": "2025-12-08T14:43:39.132254",
+    "model": "gemini-3-pro-preview",
+    "extraction_type": "VFX_DEEP_MAP_V4",
+    "sources": [
+      "IMG_0822.jpg",
+      "IMG_0824.jpg",
+      "IMG_0825.jpg",
+      "IMG_0832.jpg",
+      "IMG_0837.jpg",
+      "IMG_0839.jpg",
+      "IMG_0840.jpg",
+      "IMG_0842.jpg",
+      "IMG_0844.jpg",
+      "IMG_0845.jpg",
+      "IMG_0846.jpg",
+      "IMG_0849.jpg",
+      "IMG_0850.jpg",
+      "IMG_0851.jpg"
+    ],
+    "photo_count": 14,
+    "inspiration": "Face projection mapping, photogrammetry, 3D morphology"
+  }
+}
