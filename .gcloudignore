@@ -1,0 +1,27 @@
+.git
+.gitignore
+venv/
+__pycache__/
+Cosplay_Lab/
+v9_results/
+cache/
+data/
+docs/
+yuki-app/
+.agent/
+*.pyc
+*.pyo
+*.pyd
+*.zip
+*.tar.gz
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.jpg
+*.png
+*.jpeg
+*.gif
+# Keep specific assets if needed, but generally exclude large media from source upload
+node_modules/
