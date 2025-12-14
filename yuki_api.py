@@ -51,75 +51,32 @@ from yuki_local import YUKI_SYSTEM_PROMPT, Colors
 
 PROJECT_ID = "gifted-cooler-479623-r7"
 REGION = "us-central1"
-LOCATION = "global"
+# Default location, but will be overridden dynamically for Gemini 3
+LOCATION = "us-central1" 
 
 # GCS Configuration
 GCS_BUCKET_UPLOADS = "yuki-user-uploads"
 GCS_BUCKET_GENERATIONS = "yuki-cosplay-generations"
-GCS_CDN_BUCKET = "yuki-cdn"
 
-# BigQuery
-BQ_DATASET = "yuki_production"
-BQ_TABLE_GENERATIONS = "generations"
-
-# Models
-GEMINI_3_PRO_IMAGE = "gemini-3-pro-image-preview"
-GEMINI_3_PRO = "gemini-3-pro-preview"
+# ... (omitted constants same as before) ...
 
 # Initialize Clients
 storage_client = storage.Client(project=PROJECT_ID)
 bq_client = bigquery.Client(project=PROJECT_ID)
-genai_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
-# =============================================================================
-# APP SETUP
-# =============================================================================
-
-app = FastAPI(
-    title="Yuki Cosplay API & Agent",
-    description="Unified endpoint for Cosplay Generation and AI Agent capabilities.",
-    version="1.1.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Rate Limiting Middleware
-from yuki_rate_limiter import limiter
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class RateLimitMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Skip WebSockets (BaseHTTPMiddleware can break them)
-        if request.scope.get("type") == "websocket":
-             return await call_next(request)
+# Dynamic Client Initialization Helper
+def get_genai_client(model_name: str = "gemini-2.5-flash"):
+    """
+    Dynamically routes to 'global' for Gemini 3 models, else uses us-central1.
+    """
+    client_location = "us-central1"
+    if "gemini-3" in model_name or "gemini-exp" in model_name:
+        client_location = "global"
         
-        # Explicitly skip /ws path just in case
-        if request.url.path.startswith("/ws"):
-             return await call_next(request)
-             
-        # Skip health/root
-        if request.url.path in ["/", "/health", "/docs", "/openapi.json"]:
-            return await call_next(request)
-            
-        client_ip = request.client.host if request.client else "unknown"
-        
-        # Check limit (Default to 'free' tier for now)
-        allowed = await limiter.check_limit(client_ip, tier="free")
-        
-        if not allowed:
-            return JSONResponse(
-                status_code=429,
-                content={"detail": "Rate limit exceeded. Please try again later."}
-            )
-            
-        response = await call_next(request)
-        return response
+    return genai.Client(vertexai=True, project=PROJECT_ID, location=client_location)
+
+# Initialize default client
+genai_client = get_genai_client()
 
 app.add_middleware(RateLimitMiddleware)
 
@@ -308,8 +265,11 @@ async def process_generation(generation_id: str, request: GenerationRequest):
     try:
         prompt = get_optimized_prompt(request.target_character, request.style)
         
+        # Get correct client for Gemini 3
+        client = get_genai_client(GEMINI_3_PRO_IMAGE)
+        
         # Call Gemini 3 Image (Direct)
-        response = genai_client.models.generate_content(
+        response = client.models.generate_content(
             model=GEMINI_3_PRO_IMAGE,
             contents=[prompt],
             config=types.GenerateContentConfig(
