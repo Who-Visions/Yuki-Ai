@@ -131,28 +131,30 @@ except ImportError:
         pass
 
 # Mount A2A if available
-if A2A_AVAILABLE:
-    try:
-        # Initialize A2A components
-        a2a_card = create_yuki_agent_card()
-        a2a_handler = DefaultRequestHandler(
-            agent_executor=YukiAgentExecutor(),
-            task_store=InMemoryTaskStore(),
-        )
-        
-        a2a_app = A2AStarletteApplication(
-            agent_card=a2a_card,
-            http_handler=a2a_handler,
-        ).build()
-        
-        # Mount at root to capture A2A routes
-        app.mount("/", a2a_app) 
-        print(f"{Colors.SUCCESS_GREEN}[A2A] Application Mounted! {Colors.RESET}")
-        
-    except Exception as e:
-        print(f"{Colors.ERROR_RED}[A2A] Failed to mount: {e}{Colors.RESET}")
-else:
-    print(f"{Colors.FOX_FIRE}[A2A] Skipped mounting (SDK missing){Colors.RESET}")
+# Mount A2A if available
+# NOTE: Disabled to prevent masking of the explicit /.well-known/agent.json endpoint
+# if A2A_AVAILABLE:
+#     try:
+#         # Initialize A2A components
+#         a2a_card = create_yuki_agent_card()
+#         a2a_handler = DefaultRequestHandler(
+#             agent_executor=YukiAgentExecutor(),
+#             task_store=InMemoryTaskStore(),
+#         )
+#         
+#         a2a_app = A2AStarletteApplication(
+#             agent_card=a2a_card,
+#             http_handler=a2a_handler,
+#         ).build()
+#         
+#         # Mount at root to capture A2A routes
+#         # app.mount("/", a2a_app) 
+#         print(f"{Colors.SUCCESS_GREEN}[A2A] Application Mounted! {Colors.RESET}")
+#         
+#     except Exception as e:
+#         print(f"{Colors.ERROR_RED}[A2A] Failed to mount: {e}{Colors.RESET}")
+# else:
+#     print(f"{Colors.FOX_FIRE}[A2A] Skipped mounting (SDK missing){Colors.RESET}")
 
 
 # =============================================================================
