@@ -652,28 +652,6 @@ async def cosplay_generate_alias(request: GenerationRequest, background_tasks: B
     return await generate_cosplay(request, background_tasks)
 
 @app.get("/api/v1/status/{generation_id}")
-async def get_status(generation_id: str):
-    # Simplified Logic reading from BigQuery or just mocking if immediate
-    # Re-implement BQ status reading if needed
-    query = f"SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE_GENERATIONS}` WHERE generation_id = @gen_id LIMIT 1"
-    try:
-        job_config = bigquery.QueryJobConfig(query_parameters=[bigquery.ScalarQueryParameter("gen_id", "STRING", generation_id)])
-        results = list(bq_client.query(query, job_config=job_config).result())
-        if not results:
-             raise HTTPException(status_code=404, detail="Generation not found yet (check back in a moment)")
-        row = dict(results[0])
-        return GenerationResponse(
-            generation_id=generation_id,
-            status=row.get("status", "processing"),
-            output_url=row.get("output_gcs"),
-            cdn_url=row.get("cdn_url"),
-            message="Processing..."
-        )
-    except Exception as e:
-         return GenerationResponse(generation_id=generation_id, status="processing", message="Checking status...")
-
-
-
 # --- WebSocket Endpoint ---
 
 @app.websocket("/ws/generation/{generation_id}")
