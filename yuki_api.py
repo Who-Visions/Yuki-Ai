@@ -59,6 +59,15 @@ GCS_BUCKET_UPLOADS = "yuki-user-uploads"
 GCS_BUCKET_GENERATIONS = "yuki-cosplay-generations"
 
 # ... (omitted constants same as before) ...
+GCS_CDN_BUCKET = "yuki-cdn"
+
+# BigQuery
+BQ_DATASET = "yuki_production"
+BQ_TABLE_GENERATIONS = "generations"
+
+# Models
+GEMINI_3_PRO_IMAGE = "gemini-3-pro-image-preview"
+GEMINI_3_PRO = "gemini-3-pro-preview"
 
 # Initialize Clients
 storage_client = storage.Client(project=PROJECT_ID)
@@ -77,6 +86,56 @@ def get_genai_client(model_name: str = "gemini-2.5-flash"):
 
 # Initialize default client
 genai_client = get_genai_client()
+
+# =============================================================================
+# APP SETUP
+# =============================================================================
+
+app = FastAPI(
+    title="Yuki Cosplay API & Agent",
+    description="Unified endpoint for Cosplay Generation and AI Agent capabilities.",
+    version="1.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Rate Limiting Middleware
+from yuki_rate_limiter import limiter
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Skip WebSockets (BaseHTTPMiddleware can break them)
+        if request.scope.get("type") == "websocket":
+             return await call_next(request)
+        
+        # Explicitly skip /ws path just in case
+        if request.url.path.startswith("/ws"):
+             return await call_next(request)
+             
+        # Skip health/root
+        if request.url.path in ["/", "/health", "/docs", "/openapi.json"]:
+            return await call_next(request)
+            
+        client_ip = request.client.host if request.client else "unknown"
+        
+        # Check limit (Default to 'free' tier for now)
+        allowed = await limiter.check_limit(client_ip, tier="free")
+        
+        if not allowed:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Rate limit exceeded. Please try again later."}
+            )
+            
+        response = await call_next(request)
+        return response
 
 app.add_middleware(RateLimitMiddleware)
 
