@@ -49,7 +49,8 @@ class Colors:
 PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "global"  # Unified location for genai client
 
-vertexai.init(project=PROJECT_ID, location=LOCATION)
+# vertexai.init is handled in set_up or by other modules to avoid top-level side effects
+# vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 
 YUKI_SYSTEM_PROMPT = """
