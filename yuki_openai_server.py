@@ -1,8 +1,10 @@
 
+print("DEBUG: Pre-imports", flush=True)
 import os
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import time
 import uuid
 from typing import List, Optional, Dict, Any, Union
@@ -12,6 +14,7 @@ from google.genai import types
 import datetime
 
 # Import Yuki's Tools and Prompt
+print("DEBUG: Importing tools...", flush=True)
 from tools import (
     get_current_time,
     add_numbers,
@@ -31,7 +34,7 @@ from tools import (
     upload_to_gcs,
     download_from_gcs,
 )
-
+print("DEBUG: Importing yuki_local...", flush=True)
 from yuki_local import YUKI_SYSTEM_PROMPT, Colors
 
 # Configuration
@@ -40,12 +43,23 @@ LOCATION = "global"
 
 app = FastAPI(title="Yuki OpenAI Compatible API")
 
+# Configure CORS for A2A compatibility
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Initialize Gemini Client
+print("DEBUG: Initializing GenAI Client...", flush=True)
 client = genai.Client(
     vertexai=True,
     project=PROJECT_ID,
     location=LOCATION,
 )
+print("DEBUG: Client Initialized.", flush=True)
 
 # Tool Definitions
 tools_list = [
@@ -98,6 +112,65 @@ class ChatCompletionResponse(BaseModel):
     model: str
     choices: List[ChatCompletionResponseChoice]
     usage: Dict[str, int]
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Iyuki OpenAI-Compatible Server is Running",
+        "docs": "/docs",
+        "chat_endpoint": "/v1/chat/completions"
+    }
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/.well-known/agent.json")
+async def get_agent_card():
+    """
+    A2A Agent Identity Card - Standardized discovery endpoint.
+    """
+    return {
+        "name": "Yuki (雪姫) - The Nine-Tailed Snow Fox",
+        "version": "2.0.0",
+        "description": "A playful AI cosplay preview architect with expertise in anime, character design, and image generation. Kon kon~! 🦊",
+        "capabilities": [
+            "text-generation",
+            "image-generation",
+            "cosplay-preview",
+            "anime-identification"
+        ],
+        "endpoints": {
+            "chat": "/v1/chat/completions",
+            "health": "/health",
+            "models": "/v1/models"
+        },
+        "extensions": {
+            "color": "pink",
+            "role": "Cosplay Architect",
+            "personality": "Playful, Mischievous, Japanese-Honorifics"
+        }
+    }
+
+@app.get("/v1/models")
+async def list_models():
+    return {
+        "object": "list",
+        "data": [
+            {
+                "id": "yuki",
+                "object": "model",
+                "created": int(time.time()),
+                "owned_by": "yuki-org",
+            },
+            {
+                "id": "gemini-2.5-pro",
+                "object": "model",
+                "created": int(time.time()),
+                "owned_by": "google",
+            }
+        ]
+    }
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
 async def chat_completions(request: ChatCompletionRequest):
@@ -239,4 +312,6 @@ async def chat_completions(request: ChatCompletionRequest):
 
 if __name__ == "__main__":
     print(f"{Colors.ICE_BLUE}🦊 Yuki OpenAI-Compatible Server Starting on Port 8000...{Colors.RESET}")
+    import sys
+    sys.stdout.flush()
     uvicorn.run(app, host="0.0.0.0", port=8000)
