@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any, Union
 import time
+
+print("FOX FIRE: Yuki API Starting...", flush=True)
 import uuid
 import datetime
 import hashlib
