@@ -12,7 +12,7 @@ import asyncio
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from yuki_rate_limiter import limiter
+# from yuki_rate_limiter import limiter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any, Union
@@ -111,35 +111,35 @@ app.add_middleware(
 
 # Rate Limiting Middleware
 
-class RateLimitMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Skip WebSockets (BaseHTTPMiddleware can break them)
-        if request.scope.get("type") == "websocket":
-             return await call_next(request)
-        
-        # Explicitly skip /ws path just in case
-        if request.url.path.startswith("/ws"):
-             return await call_next(request)
-             
-        # Skip health/root
-        if request.url.path in ["/", "/health", "/docs", "/openapi.json"]:
-            return await call_next(request)
-            
-        client_ip = request.client.host if request.client else "unknown"
-        
-        # Check limit (Default to 'free' tier for now)
-        allowed = await limiter.check_limit(client_ip, tier="free")
-        
-        if not allowed:
-            return JSONResponse(
-                status_code=429,
-                content={"detail": "Rate limit exceeded. Please try again later."}
-            )
-            
-        response = await call_next(request)
-        return response
-
-app.add_middleware(RateLimitMiddleware)
+# class RateLimitMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         # Skip WebSockets (BaseHTTPMiddleware can break them)
+#         if request.scope.get("type") == "websocket":
+#              return await call_next(request)
+#         
+#         # Explicitly skip /ws path just in case
+#         if request.url.path.startswith("/ws"):
+#              return await call_next(request)
+#              
+#         # Skip health/root
+#         if request.url.path in ["/", "/health", "/docs", "/openapi.json"]:
+#             return await call_next(request)
+#             
+#         client_ip = request.client.host if request.client else "unknown"
+#         
+#         # Check limit (Default to 'free' tier for now)
+#         # allowed = await limiter.check_limit(client_ip, tier="free")
+#         
+#         # if not allowed:
+#         #     return JSONResponse(
+#         #         status_code=429,
+#         #         content={"detail": "Rate limit exceeded. Please try again later."}
+#         #     )
+#             
+#         response = await call_next(request)
+#         return response
+# 
+# # app.add_middleware(RateLimitMiddleware)
 
 # --- Robust A2A Integration ---
 A2A_AVAILABLE = False
