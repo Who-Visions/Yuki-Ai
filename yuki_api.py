@@ -653,7 +653,6 @@ async def cosplay_generate_alias(request: GenerationRequest, background_tasks: B
     """Alias for /api/v1/generate for easier access"""
     return await generate_cosplay(request, background_tasks)
 
-@app.get("/api/v1/status/{generation_id}")
 # --- WebSocket Endpoint ---
 
 @app.websocket("/ws/generation/{generation_id}")
