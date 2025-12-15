@@ -11,6 +11,8 @@ import uvicorn
 import asyncio
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from yuki_rate_limiter import limiter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any, Union
@@ -108,8 +110,6 @@ app.add_middleware(
 )
 
 # Rate Limiting Middleware
-from yuki_rate_limiter import limiter
-from starlette.middleware.base import BaseHTTPMiddleware
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
