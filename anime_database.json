@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "last_updated": "2025-12-10T20:14:16.055007",
+  "last_updated": "2025-12-02T05:59:49.037526",
   "anime": {
     "9019076e51fd": {
       "id": "9019076e51fd",
@@ -29,33 +29,6 @@
       },
       "character_ids": [],
       "poster_url": null
-    },
-    "e331b34dc077": {
-      "id": "e331b34dc077",
-      "title_english": "Frieren: Beyond Journey's End",
-      "type": "TV",
-      "status": "Finished Airing",
-      "title_romaji": "葬送のフリーレン",
-      "title_native": "葬送のフリーレン",
-      "year": 2023,
-      "episodes": 28,
-      "genres": [
-        "Adventure",
-        "Drama",
-        "Fantasy"
-      ],
-      "studio": "Madhouse",
-      "rankings": {
-        "myanimelist": {
-          "rank": 1,
-          "score": 9.29,
-          "members": 1272056
-        },
-        "animenewsnetwork": null,
-        "imdb": null
-      },
-      "character_ids": [],
-      "poster_url": "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg"
     }
   },
   "characters": {
@@ -85,171 +58,26 @@
       },
       "cosplay_generations": [],
       "reference_images": []
-    },
-    "99dce4f35c01": {
-      "id": "99dce4f35c01",
-      "name_full": "Fern",
-      "name_given": "",
-      "name_family": "",
-      "anime_id": "e331b34dc077",
-      "role": "Main",
-      "aliases": [],
-      "gender": null,
-      "age": null,
-      "hair_color": null,
-      "eye_color": null,
-      "popularity_rank": null,
-      "favorites_count": 4808,
-      "face_schema": {
-        "extracted": false,
-        "extraction_date": null,
-        "model_used": null,
-        "schema_data": null,
-        "reference_image_hashes": []
-      },
-      "cosplay_generations": [],
-      "reference_images": [
-        "https://cdn.myanimelist.net/images/characters/13/519083.jpg?s=b280b410b588ebcd3fd30ac6fad02978"
-      ]
-    },
-    "7e2c1cbc42cb": {
-      "id": "7e2c1cbc42cb",
-      "name_full": "Frieren",
-      "name_given": "",
-      "name_family": "",
-      "anime_id": "e331b34dc077",
-      "role": "Main",
-      "aliases": [],
-      "gender": null,
-      "age": null,
-      "hair_color": null,
-      "eye_color": null,
-      "popularity_rank": null,
-      "favorites_count": 28176,
-      "face_schema": {
-        "extracted": false,
-        "extraction_date": null,
-        "model_used": null,
-        "schema_data": null,
-        "reference_image_hashes": []
-      },
-      "cosplay_generations": [],
-      "reference_images": [
-        "https://cdn.myanimelist.net/images/characters/7/525105.jpg?s=1706604ec2ca141a172526b8dedf3177"
-      ]
-    },
-    "b12808e17220": {
-      "id": "b12808e17220",
-      "name_full": "Stark",
-      "name_given": "",
-      "name_family": "",
-      "anime_id": "e331b34dc077",
-      "role": "Main",
-      "aliases": [],
-      "gender": null,
-      "age": null,
-      "hair_color": null,
-      "eye_color": null,
-      "popularity_rank": null,
-      "favorites_count": 2752,
-      "face_schema": {
-        "extracted": false,
-        "extraction_date": null,
-        "model_used": null,
-        "schema_data": null,
-        "reference_image_hashes": []
-      },
-      "cosplay_generations": [],
-      "reference_images": [
-        "https://cdn.myanimelist.net/images/characters/2/523292.jpg?s=ea781ce6864ae29a56f5ce3d223d9496"
-      ]
-    },
-    "3e963fef32e9": {
-      "id": "3e963fef32e9",
-      "name_full": "Himmel",
-      "name_given": "",
-      "name_family": "",
-      "anime_id": "e331b34dc077",
-      "role": "Supporting",
-      "aliases": [],
-      "gender": null,
-      "age": null,
-      "hair_color": null,
-      "eye_color": null,
-      "popularity_rank": null,
-      "favorites_count": 3828,
-      "face_schema": {
-        "extracted": false,
-        "extraction_date": null,
-        "model_used": null,
-        "schema_data": null,
-        "reference_image_hashes": []
-      },
-      "cosplay_generations": [],
-      "reference_images": [
-        "https://cdn.myanimelist.net/images/characters/9/523295.jpg?s=4c35fb5c18a7f9544c077a4526b20512"
-      ]
-    },
-    "bcfafe89340b": {
-      "id": "bcfafe89340b",
-      "name_full": "Übel",
-      "name_given": "",
-      "name_family": "",
-      "anime_id": "e331b34dc077",
-      "role": "Supporting",
-      "aliases": [],
-      "gender": null,
-      "age": null,
-      "hair_color": null,
-      "eye_color": null,
-      "popularity_rank": null,
-      "favorites_count": 1517,
-      "face_schema": {
-        "extracted": false,
-        "extraction_date": null,
-        "model_used": null,
-        "schema_data": null,
-        "reference_image_hashes": []
-      },
-      "cosplay_generations": [],
-      "reference_images": [
-        "https://cdn.myanimelist.net/images/characters/9/543072.jpg?s=8a1e7b1b5acb4d902a9f39147e4209af"
-      ]
     }
   },
   "indices": {
     "anime_by_title": {
       "fullmetal alchemist: brotherhood": "9019076e51fd",
-      "hagane no renkinjutsushi: fullmetal alchemist": "9019076e51fd",
-      "frieren: beyond journey's end": "e331b34dc077",
-      "葬送のフリーレン": "e331b34dc077"
+      "hagane no renkinjutsushi: fullmetal alchemist": "9019076e51fd"
     },
     "characters_by_name": {
-      "edward elric": "5ae7e6de3be6",
-      "fern": "99dce4f35c01",
-      "frieren": "7e2c1cbc42cb",
-      "stark": "b12808e17220",
-      "himmel": "3e963fef32e9",
-      "übel": "bcfafe89340b"
+      "edward elric": "5ae7e6de3be6"
     },
     "characters_by_anime": {
       "9019076e51fd": [
         "5ae7e6de3be6"
-      ],
-      "e331b34dc077": [
-        "99dce4f35c01",
-        "7e2c1cbc42cb",
-        "b12808e17220",
-        "3e963fef32e9",
-        "bcfafe89340b"
       ]
     },
     "top_ranked_anime": []
   },
   "stats": {
-    "total_anime": 2,
-    "total_characters": 6,
+    "total_anime": 1,
+    "total_characters": 1,
     "characters_with_face_schemas": 0
-  },
-  "cloud_backup_enabled": false
+  }
 }

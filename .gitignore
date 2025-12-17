@@ -31,18 +31,10 @@ gcp_mirror/
 
 # User Data / Subjects / Test Artifacts
 Subjects/
+Cosplay_Lab/
 snow_test_comparison/
 dav3_anime_classics_opt3/
-Structures to learn/
+Structure to learn/
 cache/
 data/
 database/
-
-# Cosplay Lab - Track code, ignore renders/subjects
-Cosplay_Lab/Subjects/
-Cosplay_Lab/Renders/
-Cosplay_Lab/Logs/
-# Brain and Tests CODE is now tracked (*.py, *.json profiles excluded by pattern below)
-# IP profiles contain facial data - keep private
-Cosplay_Lab/Brain/*_ip.json
-Cosplay_Lab/Brain/*.db

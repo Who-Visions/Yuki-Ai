@@ -1,1 +1,0 @@
-{"success": true, "error": null, "faces": [{"confidence": 0.98828125, "joy": "VERY_UNLIKELY", "anger": "VERY_UNLIKELY", "surprise": "VERY_UNLIKELY", "sorrow": "VERY_UNLIKELY", "headwear": "VERY_UNLIKELY", "bounds": [[287, 191], [460, 191], [460, 391], [287, 391]], "roll_angle": -6.341089248657227, "pan_angle": -9.916937828063965, "tilt_angle": 1.3355039358139038}]}

@@ -7,5 +7,3 @@ google-cloud-aiplatform
 google-cloud-vertexai
 google-auth
 google-cloud-secret-manager
-a2a-sdk
-google-cloud-vision

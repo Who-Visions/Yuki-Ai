@@ -10,7 +10,7 @@ import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
-from google.cloud import storage, firestore
+from google.cloud import storage
 
 # ============================================================================
 # CONFIGURATION
@@ -19,8 +19,6 @@ from google.cloud import storage, firestore
 PROJECT_ID = "gifted-cooler-479623-r7"
 GCS_BUCKET_NAME = "yuki-anime-database"
 GCS_BACKUP_PATH = "database/anime_database.json"
-FIRESTORE_COLLECTION_ANIME = "yuki_anime"
-FIRESTORE_COLLECTION_CHARACTERS = "yuki_characters"
 
 # ============================================================================
 # HELPER FUNCTIONS (Same as before)
@@ -183,17 +181,11 @@ class CloudAnimeDatabase:
         # Initialize GCS client if cloud backup enabled
         self.storage_client = None
         self.bucket = None
-        self.firestore_client = None
-
         if self.enable_cloud_backup:
             try:
                 self.storage_client = storage.Client(project=PROJECT_ID)
                 self.bucket = self.storage_client.bucket(bucket_name)
-                
-                # Initialize Firestore
-                self.firestore_client = firestore.Client(project=PROJECT_ID)
-                
-                print(f"☁️  Cloud backup enabled: gs://{bucket_name} + Firestore")
+                print(f"☁️  Cloud backup enabled: gs://{bucket_name}")
             except Exception as e:
                 print(f"⚠️  Cloud backup disabled: {e}")
                 self.enable_cloud_backup = False
@@ -364,8 +356,6 @@ class CloudAnimeDatabase:
             # Backup to GCS (if enabled)
             if self.enable_cloud_backup and cloud_backup:
                 self._upload_to_gcs(data)
-                # Also sync to Firestore
-                self.sync_to_firestore()
             
         except Exception as e:
             print(f"❌ Error saving database: {e}")
@@ -383,59 +373,6 @@ class CloudAnimeDatabase:
             print(f"☁️  Backed up to: gs://{self.bucket_name}/{GCS_BACKUP_PATH}")
         except Exception as e:
             print(f"⚠️  Cloud backup failed: {e}")
-
-    def sync_to_firestore(self):
-        """
-        Sync current database state to Firestore
-        Uses batch writes for efficiency
-        """
-        if not self.firestore_client:
-            return
-
-        print(f"🔥 Syncing to Firestore ({len(self.anime)} anime, {len(self.characters)} chars)...")
-        
-        try:
-            # Sync Anime
-            batch = self.firestore_client.batch()
-            count = 0
-            limit = 400 # Firestore batch limit is 500
-            
-            for anime_id, anime in self.anime.items():
-                ref = self.firestore_client.collection(FIRESTORE_COLLECTION_ANIME).document(anime_id)
-                batch.set(ref, dataclass_to_dict(anime))
-                count += 1
-                
-                if count >= limit:
-                    batch.commit()
-                    batch = self.firestore_client.batch()
-                    count = 0
-            
-            if count > 0:
-                batch.commit()
-                
-            print(f"✓ Synced {len(self.anime)} anime to Firestore")
-            
-            # Sync Characters
-            batch = self.firestore_client.batch()
-            count = 0
-            
-            for char_id, char in self.characters.items():
-                ref = self.firestore_client.collection(FIRESTORE_COLLECTION_CHARACTERS).document(char_id)
-                batch.set(ref, dataclass_to_dict(char))
-                count += 1
-                
-                if count >= limit:
-                    batch.commit()
-                    batch = self.firestore_client.batch()
-                    count = 0
-            
-            if count > 0:
-                batch.commit()
-                
-            print(f"✓ Synced {len(self.characters)} characters to Firestore")
-            
-        except Exception as e:
-            print(f"❌ Firestore sync failed: {e}")
     
     def load(self):
         """
@@ -513,85 +450,6 @@ class CloudAnimeDatabase:
             print(f"✓ Restored from cloud to {self.local_path}")
             return True
         return False
-
-    async def import_from_mal(self, mal_id: int) -> Optional[str]:
-        """
-        Import anime and its characters from MyAnimeList via Jikan
-        """
-        try:
-            from jikan_client import JikanClient
-            
-            async with JikanClient() as client:
-                print(f"🌍 Fetching MAL ID {mal_id}...")
-                anime_data = await client.get_anime_by_id(mal_id)
-                characters_data = await client.get_anime_characters(mal_id)
-                
-                # Convert Jikan AnimeData to our Anime entity
-                anime = Anime(
-                    id=self.generate_id(str(mal_id)), # Use stable ID based on MAL ID
-                    title_english=anime_data.title_english or anime_data.title,
-                    title_romaji=anime_data.title_japanese, # Jikan maps Japanese title here usually
-                    title_native=anime_data.title_japanese,
-                    type=anime_data.type,
-                    status=anime_data.status,
-                    year=anime_data.year,
-                    episodes=anime_data.episodes,
-                    genres=[g.get("name") for g in anime_data.genres],
-                    studio=anime_data.studios[0].get("name") if anime_data.studios else None,
-                    poster_url=anime_data.images.get("jpg", {}).get("large_image_url"),
-                    rankings=AnimeRanking(
-                        myanimelist={"rank": anime_data.rank, "score": anime_data.score, "members": anime_data.members}
-                    )
-                )
-                
-                aid = self.add_anime(anime)
-                print(f"✓ Imported Anime: {anime.title_english} ({aid})")
-                
-                # Import Characters
-                count = 0
-                for char_item in characters_data:
-                    c_data = char_item.get("character", {})
-                    role = char_item.get("role", "Supporting")
-                    
-                    # Only import Main characters or popular supporting ones (limit noise)
-                    if role == "Main" or (char_item.get("favorites", 0) > 500):
-                        char = Character(
-                            name_full=c_data.get("name"),
-                            anime_id=aid,
-                            role=role,
-                            favorites_count=char_item.get("favorites"),
-                            reference_images=[c_data.get("images", {}).get("jpg", {}).get("image_url")]
-                        )
-                        self.add_character(char)
-                        count += 1
-                
-                print(f"✓ Imported {count} characters for {anime.title_english}")
-                return aid
-                
-        except Exception as e:
-            print(f"❌ Error importing from MAL: {e}")
-            return None
-
-    async def sync_top_anime(self, limit: int = 50):
-        """
-        Sync top anime from MAL to local/cloud database
-        """
-        try:
-            from jikan_client import JikanClient
-            
-            async with JikanClient() as client:
-                print(f"🌍 Fetching Top {limit} Anime...")
-                top_anime = await client.get_top_anime(limit=limit)
-                
-                for item in top_anime:
-                    # Check if exists first to avoid re-fetching characters if not needed
-                    # For now, we do a full import to allow updates
-                    await self.import_from_mal(item.mal_id)
-                    
-                self.save()
-                
-        except Exception as e:
-            print(f"❌ Error syncing top anime: {e}")
 
 # For backwards compatibility
 AnimeDatabase = CloudAnimeDatabase
