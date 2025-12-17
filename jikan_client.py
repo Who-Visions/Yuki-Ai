@@ -118,8 +118,8 @@ class JikanClient:
     """
     
     BASE_URL = "https://api.jikan.moe/v4"
-    RATE_LIMIT_PER_SECOND = 3
-    RATE_LIMIT_PER_MINUTE = 60
+    RATE_LIMIT_PER_SECOND = 2  # Reduced from 3 to be safe
+    RATE_LIMIT_PER_MINUTE = 50 # Reduced from 60 to be safe
     CACHE_TTL_SECONDS = 3600  # 1 hour default
     
     def __init__(
@@ -162,17 +162,20 @@ class JikanClient:
             
             # Check per-minute limit
             if len(self._request_times) >= self.RATE_LIMIT_PER_MINUTE:
-                wait_time = 60 - (now - self._request_times[0])
-                logger.warning(f"Rate limit reached, waiting {wait_time:.2f}s")
+                wait_time = 60 - (now - self._request_times[0]) + 1 # Add buffer
+                logger.info(f"Rate limit (minute) reached, waiting {wait_time:.2f}s")
                 await asyncio.sleep(wait_time)
-                self._request_times = []
+                # Re-check time after sleep to remove old entries
+                now = time.time()
+                self._request_times = [t for t in self._request_times if now - t < 60]
             
             # Check per-second limit
             recent_requests = [t for t in self._request_times if now - t < 1]
             if len(recent_requests) >= self.RATE_LIMIT_PER_SECOND:
-                await asyncio.sleep(1)
+                logger.debug("Rate limit (second) reached, small sleep")
+                await asyncio.sleep(1.2) # Sleep slightly more than 1s
             
-            self._request_times.append(now)
+            self._request_times.append(time.time()) # Append NEW time
     
     def _cache_key(self, endpoint: str, params: Optional[Dict] = None) -> str:
         """Generate cache key for request"""
@@ -214,8 +217,8 @@ class JikanClient:
             logger.warning(f"Cache set error: {e}")
     
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=4, max=20),
         retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError))
     )
     async def _make_request(
@@ -247,7 +250,11 @@ class JikanClient:
         await self._enforce_rate_limit()
         
         # Make request
-        url = urljoin(self.BASE_URL, endpoint)
+        # Ensure proper URL joining (handle leading slashes)
+        base = self.BASE_URL.rstrip('/')
+        path = endpoint.lstrip('/')
+        url = f"{base}/{path}"
+        
         start_time = time.time()
         
         try:

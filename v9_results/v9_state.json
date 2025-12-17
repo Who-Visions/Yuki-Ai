@@ -1,0 +1,17 @@
+{
+  "completed": [
+    "Storm_gen1",
+    "Wonder Woman_gen1",
+    "Black Widow_gen1",
+    "Harley Quinn_gen1",
+    "Scarlet Witch_gen1",
+    "Catwoman_gen1",
+    "Rogue_gen1",
+    "Supergirl_gen1",
+    "Jean Grey_gen1",
+    "Starfire_gen1"
+  ],
+  "failed": [],
+  "current_delay": 10,
+  "timings": []
+}
