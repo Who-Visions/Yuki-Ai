@@ -41,19 +41,91 @@ RENDER_DIR = BASE_DIR / "Cosplay_Lab/Renders/kai_bella_v11"
 
 
 # =============================================================================
-# STAGE 1: CLOUD VISION API - 34 Landmarks + Face Analysis
+# STAGE 1: CLOUD VISION API - 34 Landmarks + Face Analysis (WITH CACHING)
 # =============================================================================
 
+# Cache directory for Cloud Vision results
+CV_CACHE_DIR = BASE_DIR / "cache/cloud_vision"
+CV_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _get_file_hash(file_path: Path) -> str:
+    """Generate hash of file content for cache key"""
+    import hashlib
+    with open(file_path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
+
+
 class CloudVisionAnalyzer:
-    """Google Cloud Vision API for face detection (34 landmarks)"""
+    """
+    Google Cloud Vision API for face detection (34 landmarks)
     
-    def __init__(self):
-        self.client = vision.ImageAnnotatorClient()
+    CACHING: Results are cached by file hash. Cache is ALWAYS checked
+    first before any API call to avoid duplicate charges.
+    """
     
-    def detect_face(self, image_path: Path) -> Dict[str, Any]:
+    def __init__(self, cache_dir: Optional[Path] = None):
+        self.cache_dir = cache_dir or CV_CACHE_DIR
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self._client = None  # Lazy init to avoid API call on import
+    
+    @property
+    def client(self):
+        """Lazy-load Vision client only when needed"""
+        if self._client is None:
+            self._client = vision.ImageAnnotatorClient()
+        return self._client
+    
+    def _get_cache_path(self, image_path: Path) -> Path:
+        """Get cache file path for an image"""
+        file_hash = _get_file_hash(image_path)
+        return self.cache_dir / f"{file_hash}.json"
+    
+    def _load_from_cache(self, image_path: Path) -> Optional[Dict[str, Any]]:
+        """Load cached result if exists - ALWAYS called first"""
+        cache_path = self._get_cache_path(image_path)
+        if cache_path.exists():
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    cached = json.load(f)
+                print(f"   💾 CACHE HIT: {image_path.name} (saved ${self._estimate_cost()} API cost)")
+                return cached
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"   ⚠️ Cache read error: {e}")
+        return None
+    
+    def _save_to_cache(self, image_path: Path, result: Dict[str, Any]) -> None:
+        """Save result to cache"""
+        cache_path = self._get_cache_path(image_path)
+        try:
+            result["_cache_metadata"] = {
+                "source_file": str(image_path),
+                "cached_at": datetime.now().isoformat(),
+                "file_hash": _get_file_hash(image_path)
+            }
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2)
+            print(f"   💾 Cached result: {cache_path.name}")
+        except IOError as e:
+            print(f"   ⚠️ Cache write error: {e}")
+    
+    def _estimate_cost(self) -> str:
+        """Estimate cost saved by cache hit"""
+        # Cloud Vision Face Detection: ~$1.50 per 1000 images
+        return "~$0.0015"
+    
+    def detect_face(self, image_path: Path, force_refresh: bool = False) -> Dict[str, Any]:
         """
-        Detect face using Cloud Vision API
+        Detect face using Cloud Vision API (WITH CACHING)
         
+        FAILSAFE: Cache is ALWAYS checked first. API only called if:
+        1. No cache exists for this image
+        2. force_refresh=True is explicitly set
+        
+        Args:
+            image_path: Path to image file
+            force_refresh: If True, bypass cache and call API
+            
         Returns:
             - landmarks_34: Cloud Vision's 34 facial landmarks
             - bounding_box: face region
@@ -61,7 +133,14 @@ class CloudVisionAnalyzer:
             - emotions: joy, sorrow, anger, surprise
             - confidence: detection confidence
         """
-        print(f"   🔍 Cloud Vision: Analyzing {image_path.name}...")
+        # ===== FAILSAFE: ALWAYS CHECK CACHE FIRST =====
+        if not force_refresh:
+            cached = self._load_from_cache(image_path)
+            if cached is not None:
+                return cached
+        
+        # ===== CACHE MISS: Call Cloud Vision API =====
+        print(f"   🔍 Cloud Vision API: Analyzing {image_path.name}...")
         
         with open(image_path, "rb") as f:
             content = f.read()
@@ -71,7 +150,9 @@ class CloudVisionAnalyzer:
         
         if not response.face_annotations:
             print("   ⚠️ No face detected")
-            return {"error": "no_face_detected", "confidence": 0.0}
+            result = {"error": "no_face_detected", "confidence": 0.0}
+            self._save_to_cache(image_path, result)
+            return result
         
         face = response.face_annotations[0]
         
@@ -119,7 +200,21 @@ class CloudVisionAnalyzer:
         }
         
         print(f"   ✅ Detected {len(landmarks)} landmarks (conf: {face.detection_confidence:.2f})")
+        
+        # ===== SAVE TO CACHE =====
+        self._save_to_cache(image_path, result)
+        
         return result
+    
+    def clear_cache(self) -> int:
+        """Clear all cached results. Returns number of files deleted."""
+        import shutil
+        count = len(list(self.cache_dir.glob("*.json")))
+        if count > 0:
+            shutil.rmtree(self.cache_dir)
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        print(f"   🗑️ Cleared {count} cached entries")
+        return count
 
 
 # =============================================================================
