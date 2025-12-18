@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog | Yuki Cosplay API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8a8a9a;
+            --accent-pink: #ff6b9d;
+            --accent-purple: #9d4edd;
+            --accent-blue: #4ea8de;
+            --accent-green: #4ade80;
+            --accent-orange: #fb923c;
+            --gradient-glow: linear-gradient(135deg, #ff6b9d 0%, #9d4edd 50%, #4ea8de 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Search & Filters */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--accent-pink);
+            color: var(--text-primary);
+        }
+
+        .filter-tab.active {
+            background: var(--accent-pink);
+            border-color: var(--accent-pink);
+            color: white;
+        }
+
+        /* Entry Cards */
+        .entries {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .entry {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            transition: transform 0.2s, border-color 0.2s;
+            scroll-margin-top: 100px;
+        }
+
+        .entry:hover {
+            border-color: rgba(255, 107, 157, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .entry.highlighted {
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 30px rgba(255, 107, 157, 0.2);
+        }
+
+        .entry-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .entry-type {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entry-type.new {
+            background: rgba(78, 222, 128, 0.15);
+            color: var(--accent-green);
+        }
+
+        .entry-type.improvement {
+            background: rgba(78, 168, 222, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .entry-type.fix {
+            background: rgba(251, 146, 60, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .entry-date {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .entry-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .entry:hover .entry-link {
+            opacity: 1;
+        }
+
+        .entry-link:hover {
+            color: var(--accent-pink);
+        }
+
+        .entry h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .entry p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .entry-image {
+            margin-top: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .entry-image img {
+            width: 100%;
+            display: block;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: var(--accent-pink);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 16px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .filter-tabs {
+                justify-content: center;
+            }
+
+            .entry-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <span class="header-icon">🦊</span>
+            <h1>Yuki Changelog</h1>
+            <p>What's new in the Nine-Tailed Snow Fox</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search entries...">
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="new">✨ New</button>
+                <button class="filter-tab" data-filter="improvement">⚡ Improvement</button>
+                <button class="filter-tab" data-filter="fix">🔧 Fix</button>
+            </div>
+        </div>
+
+        <div class="entries" id="entries">
+            <!-- Entries loaded via JS -->
+        </div>
+
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="icon">🔍</div>
+            <p>No entries match your search.</p>
+        </div>
+
+        <footer class="footer">
+            <p>Built with 🤍 by <a href="https://whovisions.com">Who Visions LLC</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Changelog data - loaded from entries.json or embedded
+        let changelogData = [];
+
+        // Load entries
+        async function loadEntries() {
+            try {
+                // Try API endpoint first
+                const response = await fetch('/changelog');
+                const data = await response.json();
+                changelogData = data.entries;
+            } catch (e) {
+                // Fallback: embedded data for static hosting
+                changelogData = [
+                    {
+                        "id": "2025-12-17-chat-attachments",
+                        "date": "2025-12-17",
+                        "type": "new",
+                        "title": "Chat Attachments for Image Analysis",
+                        "description": "Users can now upload images directly in the chatbot UI for Visions AI analysis. Supports drag-and-drop and file picker."
+                    },
+                    {
+                        "id": "2025-12-17-a2a-identity-card",
+                        "date": "2025-12-17",
+                        "type": "new",
+                        "title": "A2A Identity Card Endpoint",
+                        "description": "Added /.well-known/agent.json endpoint for Agent-to-Agent protocol compatibility. Yuki can now be discovered by other AI agents."
+                    },
+                    {
+                        "id": "2025-12-15-fastapi-migration",
+                        "date": "2025-12-15",
+                        "type": "improvement",
+                        "title": "Flask to FastAPI Migration",
+                        "description": "Migrated entire backend from Flask to FastAPI with async handlers and proper CORS middleware. Validated with 180-second stress test."
+                    },
+                    {
+                        "id": "2025-12-14-cloud-run-deployment",
+                        "date": "2025-12-14",
+                        "type": "improvement",
+                        "title": "Cloud Run Production Deployment",
+                        "description": "Deployed Yuki API to Google Cloud Run with Gunicorn + UvicornWorker. Fixed container startup issues and verified A2A endpoint accessibility."
+                    },
+                    {
+                        "id": "2025-12-12-v10-facial-ip",
+                        "date": "2025-12-12",
+                        "type": "new",
+                        "title": "V10 Facial IP Extraction (2-Pass Method)",
+                        "description": "Introduced the official V10 facial identity preservation standard using a 2-pass extraction method for superior face consistency."
+                    },
+                    {
+                        "id": "2025-12-12-stress-test-automation",
+                        "date": "2025-12-12",
+                        "type": "improvement",
+                        "title": "Automated Stress Testing",
+                        "description": "Added --stress mode for automated long-duration testing. Ran 20-minute continuous ingestion tests to verify BigQuery pipeline stability."
+                    },
+                    {
+                        "id": "2025-12-11-openai-compatible-api",
+                        "date": "2025-12-11",
+                        "type": "new",
+                        "title": "OpenAI-Compatible Chat API",
+                        "description": "Yuki now exposes /v1/chat/completions endpoint compatible with OpenAI SDK. Supports tool calling with 17+ integrated tools."
+                    },
+                    {
+                        "id": "2025-12-10-gemini-3-pro-integration",
+                        "date": "2025-12-10",
+                        "type": "new",
+                        "title": "Gemini 3 Pro Image Generation",
+                        "description": "Integrated gemini-3-pro-image-preview model for cosplay generation. Added dynamic global routing for Gemini 3 model access."
+                    },
+                    {
+                        "id": "2025-12-08-websocket-progress",
+                        "date": "2025-12-08",
+                        "type": "new",
+                        "title": "Real-Time Generation Progress",
+                        "description": "Added WebSocket endpoint /ws/generation/{id} for real-time generation status updates. Clients can now see live progress."
+                    },
+                    {
+                        "id": "2025-12-05-facial-ip-endpoint",
+                        "date": "2025-12-05",
+                        "type": "new",
+                        "title": "Facial IP Extraction API",
+                        "description": "New /api/v1/facial-ip/extract endpoint for V8 facial lock profiles. Extracts critical identity markers from uploaded images."
+                    },
+                    {
+                        "id": "2025-12-03-cancel-generation",
+                        "date": "2025-12-03",
+                        "type": "new",
+                        "title": "Cancel Generation with Credit Refund",
+                        "description": "Users can now cancel in-progress generations within 30 seconds for a full credit refund via /api/v1/cancel/{id}."
+                    },
+                    {
+                        "id": "2025-12-01-yuki-agent-launch",
+                        "date": "2025-12-01",
+                        "type": "new",
+                        "title": "Yuki Agent v0.05 Launch",
+                        "description": "Initial deployment of Yuki (雪姫) - The Nine-Tailed Snow Fox AI agent to Vertex AI Reasoning Engine. Powered by Gemini 3 Pro."
+                    }
+                ];
+            }
+            renderEntries();
+            handleHashNavigation();
+        }
+
+        // Render entries
+        function renderEntries(filter = 'all', search = '') {
+            const container = document.getElementById('entries');
+            const emptyState = document.getElementById('empty-state');
+
+            let filtered = changelogData;
+
+            if (filter !== 'all') {
+                filtered = filtered.filter(e => e.type === filter);
+            }
+
+            if (search) {
+                const searchLower = search.toLowerCase();
+                filtered = filtered.filter(e =>
+                    e.title.toLowerCase().includes(searchLower) ||
+                    e.description.toLowerCase().includes(searchLower)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = filtered.map(entry => `
+                <article class="entry" id="${entry.id}">
+                    <div class="entry-header">
+                        <div class="entry-meta">
+                            <span class="entry-type ${entry.type}">${entry.type}</span>
+                            <span class="entry-date">${formatDate(entry.date)}</span>
+                        </div>
+                        <a href="#${entry.id}" class="entry-link" title="Copy link">🔗</a>
+                    </div>
+                    <h3>${entry.title}</h3>
+                    <p>${entry.description}</p>
+                    ${entry.image ? `<div class="entry-image"><img src="${entry.image}" alt="${entry.title}"></div>` : ''}
+                </article>
+            `).join('');
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // Handle hash navigation
+        function handleHashNavigation() {
+            if (window.location.hash) {
+                const id = window.location.hash.slice(1);
+                const element = document.getElementById(id);
+                if (element) {
+                    setTimeout(() => {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                        element.classList.add('highlighted');
+                        setTimeout(() => element.classList.remove('highlighted'), 2000);
+                    }, 100);
+                }
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEntries();
+
+            // Filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const filter = tab.dataset.filter;
+                    const search = document.getElementById('search').value;
+                    renderEntries(filter, search);
+                });
+            });
+
+            // Search
+            document.getElementById('search').addEventListener('input', (e) => {
+                const activeFilter = document.querySelector('.filter-tab.active').dataset.filter;
+                renderEntries(activeFilter, e.target.value);
+            });
+
+            // Hash change
+            window.addEventListener('hashchange', handleHashNavigation);
+        });
+    </script>
+</body>
+
+</html>

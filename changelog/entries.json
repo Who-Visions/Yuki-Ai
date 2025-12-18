@@ -1,0 +1,102 @@
+{
+    "entries": [
+        {
+            "id": "2025-12-18-codebase-reorg",
+            "date": "2025-12-18",
+            "type": "improvement",
+            "title": "Codebase Reorganization & Gemini 3 Updates",
+            "description": "Major codebase reorganization into comprehensive folder structure (api/, core/, agents/, image_gen/, analyzers/, etc.). Updated Gemini 3 pricing to official Dec 2025 rates (Flash: $0.50/$3.00, Pro: $2/$12). Added Reasoning Engine REST integration and batch API token limits documentation."
+        },
+        {
+            "id": "2025-12-18-gemini-3-migration-final",
+            "date": "2025-12-18",
+            "type": "new",
+            "title": "Gemini 3 Migration & Internal Reasoning Finalized",
+            "description": "Full migration to Gemini 3 series complete. Implemented 'Thinking' protocol with capture of 'thoughtsTokenCount'. Added REST-compatible aliases for advanced parameters and updated contract pricing (Flash: $0.40/$1.60, Pro: $10.0/$30.0)."
+        },
+        {
+            "id": "2025-12-17-chat-attachments",
+            "date": "2025-12-17",
+            "type": "new",
+            "title": "Chat Attachments for Image Analysis",
+            "description": "Users can now upload images directly in the chatbot UI for Visions AI analysis. Supports drag-and-drop and file picker."
+        },
+        {
+            "id": "2025-12-17-a2a-identity-card",
+            "date": "2025-12-17",
+            "type": "new",
+            "title": "A2A Identity Card Endpoint",
+            "description": "Added /.well-known/agent.json endpoint for Agent-to-Agent protocol compatibility. Yuki can now be discovered by other AI agents."
+        },
+        {
+            "id": "2025-12-15-fastapi-migration",
+            "date": "2025-12-15",
+            "type": "improvement",
+            "title": "Flask to FastAPI Migration",
+            "description": "Migrated entire backend from Flask to FastAPI with async handlers and proper CORS middleware. Validated with 180-second stress test."
+        },
+        {
+            "id": "2025-12-14-cloud-run-deployment",
+            "date": "2025-12-14",
+            "type": "improvement",
+            "title": "Cloud Run Production Deployment",
+            "description": "Deployed Yuki API to Google Cloud Run with Gunicorn + UvicornWorker. Fixed container startup issues and verified A2A endpoint accessibility."
+        },
+        {
+            "id": "2025-12-12-v10-facial-ip",
+            "date": "2025-12-12",
+            "type": "new",
+            "title": "V10 Facial IP Extraction (2-Pass Method)",
+            "description": "Introduced the official V10 facial identity preservation standard using a 2-pass extraction method: initial thinking_level='low' followed by thinking_level='high' refinement for superior face consistency."
+        },
+        {
+            "id": "2025-12-12-stress-test-automation",
+            "date": "2025-12-12",
+            "type": "improvement",
+            "title": "Automated Stress Testing",
+            "description": "Added --stress mode for automated long-duration testing. Ran 20-minute continuous ingestion tests to verify BigQuery pipeline stability."
+        },
+        {
+            "id": "2025-12-11-openai-compatible-api",
+            "date": "2025-12-11",
+            "type": "new",
+            "title": "OpenAI-Compatible Chat API",
+            "description": "Yuki now exposes /v1/chat/completions endpoint compatible with OpenAI SDK. Supports tool calling with 17+ integrated tools."
+        },
+        {
+            "id": "2025-12-10-gemini-3-pro-integration",
+            "date": "2025-12-10",
+            "type": "new",
+            "title": "Gemini 3 Pro Image Generation",
+            "description": "Integrated gemini-3-pro-image-preview model for cosplay generation. Added dynamic global routing for Gemini 3 model access."
+        },
+        {
+            "id": "2025-12-08-websocket-progress",
+            "date": "2025-12-08",
+            "type": "new",
+            "title": "Real-Time Generation Progress",
+            "description": "Added WebSocket endpoint /ws/generation/{id} for real-time generation status updates. Clients can now see live progress."
+        },
+        {
+            "id": "2025-12-05-facial-ip-endpoint",
+            "date": "2025-12-05",
+            "type": "new",
+            "title": "Facial IP Extraction API",
+            "description": "New /api/v1/facial-ip/extract endpoint for V8 facial lock profiles. Extracts critical identity markers from uploaded images."
+        },
+        {
+            "id": "2025-12-03-cancel-generation",
+            "date": "2025-12-03",
+            "type": "new",
+            "title": "Cancel Generation with Credit Refund",
+            "description": "Users can now cancel in-progress generations within 30 seconds for a full credit refund via /api/v1/cancel/{id}."
+        },
+        {
+            "id": "2025-12-01-yuki-agent-launch",
+            "date": "2025-12-01",
+            "type": "new",
+            "title": "Yuki Agent v0.05 Launch",
+            "description": "Initial deployment of Yuki (雪姫) - The Nine-Tailed Snow Fox AI agent to Vertex AI Reasoning Engine. Powered by Gemini 3 Pro."
+        }
+    ]
+}
