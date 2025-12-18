@@ -10,8 +10,8 @@ from google import genai
 from google.genai import types
 import json
 
-# AI Studio API Key (separate quota from Vertex AI)
-API_KEY = "AIzaSyCFsFL0Ps7V8UX-zDTbadxj5wRD4ks_Maw"
+import os
+API_KEY = os.environ.get("GEMINI_API_KEY")
 IMAGE_MODEL = "gemini-3-pro-image-preview"  # Gemini 3 image generation
 
 async def generate_one(ref_index: int = 1):

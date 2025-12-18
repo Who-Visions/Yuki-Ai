@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 # Config
 # AI Studio API Key (separate quota from Vertex AI)
-API_KEY = "AIzaSyCFsFL0Ps7V8UX-zDTbadxj5wRD4ks_Maw"
+API_KEY = os.environ.get("GEMINI_API_KEY")
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 TEXT_MODEL = "gemini-3-flash-preview"
 

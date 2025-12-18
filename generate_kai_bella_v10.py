@@ -12,8 +12,8 @@ from google.genai import types
 import json
 import random
 
-# AI Studio API Key
-API_KEY = "AIzaSyCFsFL0Ps7V8UX-zDTbadxj5wRD4ks_Maw"
+import os
+API_KEY = os.environ.get("GEMINI_API_KEY")
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 
 async def generate_with_retry(client, model, contents, config, max_retries=5):
