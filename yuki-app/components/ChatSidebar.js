@@ -80,8 +80,8 @@ export function ChatSidebar({ isOpen, onClose }) {
         setIsLoading(true);
 
         try {
-            // Local API Call (since Cloud Run is 503)
-            const response = await fetch('http://127.0.0.1:8000/chat', {
+            // Cloud Run API Call
+            const response = await fetch('https://yuki-ai-3tasud2htq-uc.a.run.app/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
