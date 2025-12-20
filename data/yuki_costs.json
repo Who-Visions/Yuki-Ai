@@ -1,0 +1,125 @@
+[
+  {
+    "timestamp": "2025-12-03T03:29:16.643425",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-2.5-flash",
+    "operation": "analysis",
+    "count": 1,
+    "tokens_in": 5000,
+    "tokens_out": 0,
+    "cost_usd": 0.0015,
+    "metadata": {
+      "batch_size": 10
+    }
+  },
+  {
+    "timestamp": "2025-12-03T03:29:16.644611",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-image-preview",
+    "operation": "generation",
+    "count": 10,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": 1.3,
+    "metadata": {
+      "batch_size": 10
+    }
+  },
+  {
+    "timestamp": "2025-12-03T08:21:31.411571",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-2.5-flash",
+    "operation": "analysis",
+    "count": 1,
+    "tokens_in": 5000,
+    "tokens_out": 0,
+    "cost_usd": 0.0015,
+    "metadata": {
+      "type": "perspective_correction"
+    }
+  },
+  {
+    "timestamp": "2025-12-18T03:21:41.169625",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4692,
+    "tokens_out": 821,
+    "thoughts_tokens": 0,
+    "cost_usd": 0.07155,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:22:32.150799",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4189,
+    "tokens_out": 615,
+    "thoughts_tokens": 0,
+    "cost_usd": 0.06034,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:24:30.552014",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4912,
+    "tokens_out": 903,
+    "thoughts_tokens": 0,
+    "cost_usd": 0.07621,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:25:42.518567",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4467,
+    "tokens_out": 960,
+    "thoughts_tokens": 0,
+    "cost_usd": 0.07347,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:27:08.937697",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4921,
+    "tokens_out": 535,
+    "thoughts_tokens": 347,
+    "cost_usd": 0.07567,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:28:19.322700",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 4733,
+    "tokens_out": 864,
+    "thoughts_tokens": 0,
+    "cost_usd": 0.07325,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-18T03:29:36.636273",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 3231,
+    "tokens_out": 553,
+    "thoughts_tokens": 1068,
+    "cost_usd": 0.08094,
+    "metadata": {}
+  }
+]

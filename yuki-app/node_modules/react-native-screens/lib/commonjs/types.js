@@ -25,25 +25,14 @@ Object.keys(_BottomTabsScreen).forEach(function (key) {
     }
   });
 });
-var _SplitViewHost = require("./components/gamma/SplitViewHost.types");
-Object.keys(_SplitViewHost).forEach(function (key) {
+var _types = require("./components/shared/types");
+Object.keys(_types).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _SplitViewHost[key]) return;
+  if (key in exports && exports[key] === _types[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
-      return _SplitViewHost[key];
-    }
-  });
-});
-var _SplitViewScreen = require("./components/gamma/SplitViewScreen.types");
-Object.keys(_SplitViewScreen).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _SplitViewScreen[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _SplitViewScreen[key];
+      return _types[key];
     }
   });
 });

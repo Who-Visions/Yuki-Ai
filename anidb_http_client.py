@@ -26,9 +26,11 @@ logger = logging.getLogger(__name__)
 
 class AniDBHTTPClient:
     BASE_URL = "http://api.anidb.net:9001/httpapi"
-    CLIENT_NAME = "yukiclient"  # Must be registered if used in prod
+    CLIENT_NAME = "whovisions"
     CLIENT_VER = 1
     PROTO_VER = 1
+    USER = "whovisions"
+    PASS = "Kuro!Phoe412^"
     
     def __init__(self):
         self._last_request_time = 0.0
@@ -52,7 +54,9 @@ class AniDBHTTPClient:
         params.update({
             "client": self.CLIENT_NAME,
             "clientver": self.CLIENT_VER,
-            "protover": self.PROTO_VER
+            "protover": self.PROTO_VER,
+            "user": self.USER,
+            "pass": self.PASS
         })
         
         headers = {"Accept-Encoding": "gzip"}

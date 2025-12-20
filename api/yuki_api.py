@@ -803,6 +803,72 @@ async def cosplay_generate_alias(request: GenerationRequest, background_tasks: B
     """Alias for /api/v1/generate for easier access"""
     return await generate_cosplay(request, background_tasks)
 
+
+# --- Semantic Search Endpoint ---
+class SemanticSearchRequest(BaseModel):
+    query: str
+    include_characters: bool = True
+    include_series: bool = True
+    top_k: int = 10
+    min_score: float = 0.3
+
+class SemanticSearchResult(BaseModel):
+    query: str
+    characters: List[Dict[str, Any]]
+    series: List[Dict[str, Any]]
+    total: int
+
+@app.post("/api/v1/semantic-search", response_model=SemanticSearchResult)
+async def semantic_search_endpoint(request: SemanticSearchRequest):
+    """
+    Semantic search across characters and series using Gemini Embeddings.
+    Returns ranked results by similarity score.
+    """
+    try:
+        from tools.semantic_search import hybrid_search
+        
+        results = hybrid_search(
+            query=request.query,
+            include_characters=request.include_characters,
+            include_series=request.include_series,
+            top_k=request.top_k,
+            min_score=request.min_score
+        )
+        
+        return SemanticSearchResult(
+            query=results["query"],
+            characters=results["characters"],
+            series=results["series"],
+            total=results["total"]
+        )
+    except Exception as e:
+        print(f"{Colors.ERROR_RED}Semantic Search Error: {e}{Colors.RESET}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/semantic-search")
+async def semantic_search_get(
+    q: str,
+    include_characters: bool = True,
+    include_series: bool = True,
+    top_k: int = 10,
+    min_score: float = 0.3
+):
+    """GET version of semantic search for easy browser testing."""
+    try:
+        from tools.semantic_search import hybrid_search
+        
+        return hybrid_search(
+            query=q,
+            include_characters=include_characters,
+            include_series=include_series,
+            top_k=top_k,
+            min_score=min_score
+        )
+    except Exception as e:
+        print(f"{Colors.ERROR_RED}Semantic Search Error: {e}{Colors.RESET}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # --- WebSocket Endpoint ---
 
 @app.websocket("/ws/generation/{generation_id}")

@@ -1,0 +1,1054 @@
+{
+    "characters": [
+        {
+            "character": "Makima",
+            "source": "Chainsaw Man",
+            "silhouette": {
+                "defining_shape": "Sharp red suit + pencil skirt + controlling posture",
+                "priority_pieces": [
+                    "Red Blazer",
+                    "White Dress Shirt",
+                    "Black Midi Skirt"
+                ],
+                "time_allocation": 60
+            },
+            "details": {
+                "signature_elements": [
+                    "Burgundy eyeshadow",
+                    "Red tie/ribbon",
+                    "Hypnotic eye contact"
+                ],
+                "time_allocation": 25
+            },
+            "precision": {
+                "visible_areas": [
+                    "Blazer lapels",
+                    "Collar crispness"
+                ],
+                "hidden_compromises": [
+                    "Jacket lining",
+                    "Waistband",
+                    "Underarm seams"
+                ],
+                "time_allocation": 15
+            },
+            "original": {
+                "base": [
+                    "Red suit jacket",
+                    "White dress shirt",
+                    "Black pencil skirt"
+                ],
+                "accessories": [
+                    "Black loafers",
+                    "Red tie",
+                    "Black belt"
+                ],
+                "hair": "Dark red/burgundy wig (24\"+), slight waves",
+                "makeup": "Burgundy eye makeup, sharp wing, cold expression",
+                "props": [
+                    "Miniature gun prop (optional)"
+                ],
+                "cost_range": [
+                    160,
+                    220
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Long black wool coat over blazer",
+                    "Thigh-high boots"
+                ],
+                "accessories": [
+                    "Burgundy wool scarf",
+                    "Black leather gloves"
+                ],
+                "hair": "Frost effect on wig (white spray)",
+                "makeup": "Frost eyeshadow on inner corners, white eyeliner",
+                "props": [
+                    "Frozen gun prop with ice-blue accents",
+                    "Fake blood drips"
+                ],
+                "cost_range": [
+                    235,
+                    340
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Blazer": 60,
+                    "Makeup": 25,
+                    "Shoes": 15
+                },
+                "build_sequence": [
+                    "Week 1: Thrift blazer & pants",
+                    "Week 2: Tailor fit & hem",
+                    "Week 3: Makeup practice",
+                    "Week 4: Posture training"
+                ],
+                "skill_level": "Easy-Medium",
+                "con_day_tips": [
+                    "Posture is key: shoulders back",
+                    "Bring lipstick for touch-ups",
+                    "Practice standard 'Makima stare'"
+                ],
+                "pro_tips": [
+                    "Thrift the blazer ($10-25) to save huge money",
+                    "Fit matters more than fabric quality",
+                    "Use the 'Squint Test' for silhouette",
+                    "Use iron-on hem tape for instant tailoring (Works best on heavy suit fabric)"
+                ]
+            }
+        },
+        {
+            "character": "Elsa",
+            "source": "Frozen",
+            "silhouette": {
+                "defining_shape": "Long flowing gown + platinum braid + regal posture",
+                "priority_pieces": [
+                    "Ice-blue Gown",
+                    "Platinum Wig",
+                    "Cape"
+                ],
+                "time_allocation": 60
+            },
+            "details": {
+                "signature_elements": [
+                    "Platinum blonde hair",
+                    "Ice-blue eyeshadow",
+                    "Flowing cape effect",
+                    "Gold accessories"
+                ],
+                "time_allocation": 30
+            },
+            "precision": {
+                "visible_areas": [
+                    "Gown hem",
+                    "Bodice fit"
+                ],
+                "hidden_compromises": [
+                    "Interior seams",
+                    "Dress lining"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "Ice-blue ball gown",
+                    "Sweetheart neckline",
+                    "Fitted bodice"
+                ],
+                "accessories": [
+                    "Silver heels",
+                    "Blue crystal hair accessory",
+                    "Silver jewelry"
+                ],
+                "hair": "Platinum blonde wig (28\"+), side braid",
+                "makeup": "Fair skin, ice-blue shimmer eyes, white eyeliner",
+                "props": [
+                    "Ice staff (optional)"
+                ],
+                "cost_range": [
+                    150,
+                    250
+                ]
+            },
+            "winter": {
+                "base": [
+                    "White faux-fur stole/cape",
+                    "White sheer overlay"
+                ],
+                "accessories": [
+                    "Ice-blue/white boots with fur trim",
+                    "White opera gloves"
+                ],
+                "hair": "Frost effect on wig (white spray/yarn)",
+                "makeup": "Intensified white/frost eyeshadow, all-over shimmer",
+                "props": [
+                    "Elaborate ice crystal staff",
+                    "Flowing ribbons"
+                ],
+                "cost_range": [
+                    230,
+                    400
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Gown": 60,
+                    "Wig": 25,
+                    "Shoes": 10
+                },
+                "build_sequence": [
+                    "Week 1: Order gown & wig",
+                    "Week 2: Initial fitting",
+                    "Week 3: Makeup & wig styling",
+                    "Week 4: Final fit"
+                ],
+                "skill_level": "Medium-Hard",
+                "con_day_tips": [
+                    "Train walking in gown/heels",
+                    "Bring wig glue",
+                    "Posture: tall & graceful"
+                ],
+                "pro_tips": [
+                    "Buy pre-made gown to save 5+ hours",
+                    "Wig quality is non-negotiable",
+                    "Practice ice-makeup 2x",
+                    "Use fabric glue for crystals (Test first! Glue bleeds through sheer fabric)"
+                ]
+            }
+        },
+        {
+            "character": "Yoruichi Shihouin",
+            "source": "Bleach",
+            "silhouette": {
+                "defining_shape": "Athletic block colors (Orange/Black) + High Ponytail",
+                "priority_pieces": [
+                    "Orange Crop Top",
+                    "Black Shorts",
+                    "Ponytail Wig"
+                ],
+                "time_allocation": 40
+            },
+            "details": {
+                "signature_elements": [
+                    "Purple wrist guards",
+                    "Confident smirk",
+                    "Saturated orange color"
+                ],
+                "time_allocation": 30
+            },
+            "precision": {
+                "visible_areas": [
+                    "Wrist guard fit",
+                    "Examples of 'clean' hems"
+                ],
+                "hidden_compromises": [
+                    "Inside seams of crop top",
+                    "Shorts lining"
+                ],
+                "time_allocation": 30
+            },
+            "original": {
+                "base": [
+                    "Orange crop top",
+                    "Black fitted shorts",
+                    "White sash/belt"
+                ],
+                "accessories": [
+                    "Purple wrist warms/guards",
+                    "Black ankle boots"
+                ],
+                "hair": "Long purple/black ponytail wig (24\"+)",
+                "makeup": "Sharp eyeliner, gold shimmer, confident expression",
+                "props": [
+                    "None (Hand-to-hand fighter)"
+                ],
+                "cost_range": [
+                    60,
+                    90
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Purple cat-ear parka",
+                    "Fleece leggings under shorts"
+                ],
+                "accessories": [
+                    "Black thigh-high boots",
+                    "White faux fur collar"
+                ],
+                "hair": "Frost tips on ponytail",
+                "makeup": "Cool-toned shimmer on cheeks",
+                "props": [
+                    "Ice-blue fabric tape on wrist guards"
+                ],
+                "cost_range": [
+                    110,
+                    160
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Fit/Alterations": 40,
+                    "Wig": 30,
+                    "Accessories": 20
+                },
+                "build_sequence": [
+                    "Week 1: Buy base athletic wear",
+                    "Week 2: Make/Buy wrist guards",
+                    "Week 3: Wig styling",
+                    "Week 4: Posing practice"
+                ],
+                "skill_level": "Easy",
+                "con_day_tips": [
+                    "Confidence is 50% of the look",
+                    "Athletic shoes for comfort",
+                    "Bring safety pins for sash"
+                ],
+                "pro_tips": [
+                    "Use saturated colors; pale orange looks faded",
+                    "Foam wrist guards take 30 mins to make",
+                    "Comfortable for all-day wear",
+                    "Seal EVA foam guards with Mod Podge before painting"
+                ]
+            }
+        },
+        {
+            "character": "Shinobu Kocho",
+            "source": "Demon Slayer",
+            "silhouette": {
+                "defining_shape": "Butterfly Haori (sleeves) + Bun Hairdo",
+                "priority_pieces": [
+                    "Butterfly Haori",
+                    "Leg wraps"
+                ],
+                "time_allocation": 70
+            },
+            "details": {
+                "signature_elements": [
+                    "Butterfly hair clip",
+                    "Purple gradient on fabric",
+                    "Katana hilt"
+                ],
+                "time_allocation": 20
+            },
+            "precision": {
+                "visible_areas": [
+                    "Haori pattern edges",
+                    "Leg wrap symmetry"
+                ],
+                "hidden_compromises": [
+                    "Uniform jacket under-details",
+                    "Back of belt"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "Slayer uniform (black pants/top)",
+                    "Butterfly pattern Haori"
+                ],
+                "accessories": [
+                    "Leg wraps (kyahan)",
+                    "White belt",
+                    "Zori sandals"
+                ],
+                "hair": "Black/Purple bun wig + Butterfly ornament",
+                "makeup": "Gentle smile, purple eyeliner",
+                "props": [
+                    "Nichirin Sword (Stinger type)"
+                ],
+                "cost_range": [
+                    130,
+                    200
+                ]
+            },
+            "winter": {
+                "base": [
+                    "White faux-fur stole over Haori",
+                    "Thicker leggings"
+                ],
+                "accessories": [
+                    "Fur-lined boots",
+                    "White/Lavender leg warmers"
+                ],
+                "hair": "Frost spray on bun & tips",
+                "makeup": "White eyeliner, frost-highlighter",
+                "props": [
+                    "Frosted poison bottles",
+                    "Ice-blue sword wrap"
+                ],
+                "cost_range": [
+                    190,
+                    310
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Haori": 50,
+                    "Wig": 20,
+                    "Sword": 20
+                },
+                "build_sequence": [
+                    "Week 1: Source uniform & Haori",
+                    "Week 2: Adjust leg wraps",
+                    "Week 3: Wig & Butterfly clip",
+                    "Week 4: Prop painting"
+                ],
+                "skill_level": "Medium",
+                "con_day_tips": [
+                    "Practice smiling with eyes",
+                    "Haori sleeves can catch on things",
+                    "Sword needs peace-bonding"
+                ],
+                "pro_tips": [
+                    "Stencil fabric paint for clean butterfly lines",
+                    "Purchase pre-made Haori to save 10+ hours"
+                ]
+            }
+        },
+        {
+            "character": "Nobara Kugisaki",
+            "source": "Jujutsu Kaisen",
+            "silhouette": {
+                "defining_shape": "School Uniform (Blazer/Skirt) + Hammer/Nails",
+                "priority_pieces": [
+                    "Jujutsu Uniform High Collar",
+                    "Hammer Prop"
+                ],
+                "time_allocation": 50
+            },
+            "details": {
+                "signature_elements": [
+                    "Orange hair color",
+                    "Hammer prop",
+                    "Confident swagger"
+                ],
+                "time_allocation": 30
+            },
+            "precision": {
+                "visible_areas": [
+                    "Skirt pleats",
+                    "Button alignment"
+                ],
+                "hidden_compromises": [
+                    "Shirt tuck",
+                    "Sock height (adjustable)"
+                ],
+                "time_allocation": 20
+            },
+            "original": {
+                "base": [
+                    "Navy/Black uniform blazer",
+                    "Pleated skirt",
+                    "White shirt"
+                ],
+                "accessories": [
+                    "Black tights/socks",
+                    "Brown belt",
+                    "Loafers"
+                ],
+                "hair": "Orange/Ginger bob cut wig",
+                "makeup": "Natural/Fierce look, orange-tinted lips",
+                "props": [
+                    "Hammer & Nails (Foam)"
+                ],
+                "cost_range": [
+                    120,
+                    180
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Oversized orange/rust hoodie over blazer",
+                    "Leg warmers"
+                ],
+                "accessories": [
+                    "Combat boots (orange/brown)",
+                    "Ear muffs"
+                ],
+                "hair": "Frost streaks in orange hair",
+                "makeup": "White highlighter on nose/cheeks (cold flush)",
+                "props": [
+                    "Frosted hammer handle",
+                    "Ice-blue nails"
+                ],
+                "cost_range": [
+                    170,
+                    270
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Uniform": 40,
+                    "Wig": 20,
+                    "Props": 20
+                },
+                "build_sequence": [
+                    "Week 1: Buy uniform set",
+                    "Week 2: Make/Buy Hammer",
+                    "Week 3: Wig styling",
+                    "Week 4: Posing practice"
+                ],
+                "skill_level": "Easy",
+                "con_day_tips": [
+                    "Hammer must be foam/lightweight",
+                    "Skirt length check for comfort",
+                    "Bring personality"
+                ],
+                "pro_tips": [
+                    "Uniform fit is key - tailor if needed",
+                    "Orange & Black contrast pops in photos"
+                ]
+            }
+        },
+        {
+            "character": "Ganyu",
+            "source": "Genshin Impact",
+            "silhouette": {
+                "defining_shape": "Horns + Bodysuit/Dress Combo + Bell",
+                "priority_pieces": [
+                    "Horns",
+                    "Qipao-style dress",
+                    "Cowbell"
+                ],
+                "time_allocation": 70
+            },
+            "details": {
+                "signature_elements": [
+                    "Cryo Vision",
+                    "Complex back details",
+                    "Teal hair"
+                ],
+                "time_allocation": 20
+            },
+            "precision": {
+                "visible_areas": [
+                    "Bodysuit fit",
+                    "Horn attachment to wig"
+                ],
+                "hidden_compromises": [
+                    "Shoe comfort (hidden by height?) No",
+                    "Back zipper"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "Black/Blue bodysuit",
+                    "White apron/dress overlay",
+                    "Sleeves"
+                ],
+                "accessories": [
+                    "Horns (Red/Black)",
+                    "Cowbell",
+                    "Gold accents"
+                ],
+                "hair": "Blue/Teal long wig",
+                "makeup": "Gentle, sleepy eyes, soft pink lips",
+                "props": [
+                    "Amos Bow (optional)"
+                ],
+                "cost_range": [
+                    140,
+                    210
+                ]
+            },
+            "winter": {
+                "base": [
+                    "White plush cape",
+                    "Fur-lined sleeves"
+                ],
+                "accessories": [
+                    "White gloves",
+                    "Fur boot covers"
+                ],
+                "hair": "Snow-dusted wig tips",
+                "makeup": "Icy blue contacts, pale skin base",
+                "props": [
+                    "Frosted Vision",
+                    "Icicle accessories"
+                ],
+                "cost_range": [
+                    220,
+                    360
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Costume Set": 60,
+                    "Wig": 20,
+                    "Horns": 10
+                },
+                "build_sequence": [
+                    "Week 1: Order costume (complex)",
+                    "Week 2: Secure horns to wig",
+                    "Week 3: Vision LED setup",
+                    "Week 4: Makeup test"
+                ],
+                "skill_level": "Medium-Hard",
+                "con_day_tips": [
+                    "Vision should glow (LED)",
+                    "Watch out for horn clearance",
+                    "Bodysuit tape is essential"
+                ],
+                "pro_tips": [
+                    "Buy the costume set; sewing this is advanced",
+                    "Focus on secure horn attachment"
+                ]
+            }
+        },
+        {
+            "character": "Ciri",
+            "source": "The Witcher",
+            "silhouette": {
+                "defining_shape": "White Shirt + Corset/Leather + Sword on Back",
+                "priority_pieces": [
+                    "Corset/Belt",
+                    "Leather pants",
+                    "Sword"
+                ],
+                "time_allocation": 60
+            },
+            "details": {
+                "signature_elements": [
+                    "Scar on face",
+                    "Ash-blonde hair",
+                    "Emerald green details"
+                ],
+                "time_allocation": 30
+            },
+            "precision": {
+                "visible_areas": [
+                    "Weathering on leather",
+                    "Scar realism"
+                ],
+                "hidden_compromises": [
+                    "Back of boots",
+                    "Shirt underneath corset"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "White linen shirt",
+                    "Brown leather corset",
+                    "Tan pants"
+                ],
+                "accessories": [
+                    "Leather gloves",
+                    "Sword belt",
+                    "Boots"
+                ],
+                "hair": "Ash-blonde messy bun/loose wig",
+                "makeup": "Scar (collodion/makeup), dark eyes",
+                "props": [
+                    "Zireael Sword (Steel/Silver)"
+                ],
+                "cost_range": [
+                    150,
+                    230
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Heavy fur-lined cloak",
+                    "Darker leather layers"
+                ],
+                "accessories": [
+                    "Fur gauntlets",
+                    "Scarf wrapping"
+                ],
+                "hair": "Wind-swept frozen look",
+                "makeup": "Pale 'frozen' skin, red nose/cheeks",
+                "props": [
+                    "Frosted sword blade",
+                    "Snow-covered boots"
+                ],
+                "cost_range": [
+                    250,
+                    410
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Leather/Corset": 40,
+                    "Sword": 30,
+                    "Wig": 15
+                },
+                "build_sequence": [
+                    "Week 1: Source leather pieces",
+                    "Week 2: Weathering/Distressing",
+                    "Week 3: Scar makeup practice",
+                    "Week 4: Sword finish"
+                ],
+                "skill_level": "Hard",
+                "con_day_tips": [
+                    "Weathering makes it look real",
+                    "Practice drawing sword from back",
+                    "Scar placement consistency"
+                ],
+                "pro_tips": [
+                    "Real leather thrifted belts > foam for details",
+                    "Use shoe polish to age leather"
+                ]
+            }
+        },
+        {
+            "character": "Ahsoka Tano",
+            "source": "Star Wars",
+            "silhouette": {
+                "defining_shape": "Montrals (Head tails) + Dual Lightsabers",
+                "priority_pieces": [
+                    "Headpiece",
+                    "Lightsabers"
+                ],
+                "time_allocation": 70
+            },
+            "details": {
+                "signature_elements": [
+                    "Orange skin tone",
+                    "White facial markings",
+                    "Reverse grip sabers"
+                ],
+                "time_allocation": 20
+            },
+            "precision": {
+                "visible_areas": [
+                    "Face paint edges",
+                    "Headpiece transition"
+                ],
+                "hidden_compromises": [
+                    "Back of belt",
+                    "Boot soles"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "Combat tunic",
+                    "Arm/Leg guards",
+                    "Belt"
+                ],
+                "accessories": [
+                    "Montrals (Foam/Latex)",
+                    "Boots"
+                ],
+                "hair": "None (Lekku/Montrals)",
+                "makeup": "Orange body paint, white markings",
+                "props": [
+                    "Dual white/blue lightsabers"
+                ],
+                "cost_range": [
+                    160,
+                    250
+                ]
+            },
+            "winter": {
+                "base": [
+                    "White woolen cloak/Jedi robe",
+                    "Fur collar"
+                ],
+                "accessories": [
+                    "White connective wraps",
+                    "Snow boots"
+                ],
+                "hair": "None (Frosted Montrals)",
+                "makeup": "Pale orange (cold) skin, frost texture",
+                "props": [
+                    "Unstable/Crackle blade effect"
+                ],
+                "cost_range": [
+                    250,
+                    410
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Headpiece": 40,
+                    "Lightsabers": 30,
+                    "Body Paint": 10
+                },
+                "build_sequence": [
+                    "Week 1: Order/Make Headpiece",
+                    "Week 2: Costume base",
+                    "Week 3: Lightsabers",
+                    "Week 4: Body paint test"
+                ],
+                "skill_level": "Medium-Hard",
+                "con_day_tips": [
+                    "Seal body paint properly!",
+                    "Headpiece can maximize heat - stay hydrated",
+                    "Lightsaber batteries"
+                ],
+                "pro_tips": [
+                    "Buy the headpiece if possible - hard to DIY well",
+                    "Practice poses with reverse grip"
+                ]
+            }
+        },
+        {
+            "character": "Tifa Lockhart",
+            "source": "Final Fantasy VII",
+            "silhouette": {
+                "defining_shape": "White Tank + Suspenders + Skirt + Gloves",
+                "priority_pieces": [
+                    "White Tank Top",
+                    "Black Skirt/Suspenders",
+                    "Red Gloves"
+                ],
+                "time_allocation": 60
+            },
+            "details": {
+                "signature_elements": [
+                    "Red eyes",
+                    "Long black hair",
+                    "Earring"
+                ],
+                "time_allocation": 20
+            },
+            "precision": {
+                "visible_areas": [
+                    "Glove armor details",
+                    "Suspender fit"
+                ],
+                "hidden_compromises": [
+                    "Sock tops",
+                    "Shoe brand"
+                ],
+                "time_allocation": 20
+            },
+            "original": {
+                "base": [
+                    "White cropped tank",
+                    "Black pleated miniskirt",
+                    "Suspenders"
+                ],
+                "accessories": [
+                    "Red fighting gloves/gauntlets",
+                    "Black socks",
+                    "Red boots"
+                ],
+                "hair": "Long black straight wig + dolphin tail tip",
+                "makeup": "Red contacts, natural athletic look",
+                "props": [
+                    "Materia orbs (optional)"
+                ],
+                "cost_range": [
+                    130,
+                    200
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Oversized leather bomber jacket",
+                    "Thicker tights"
+                ],
+                "accessories": [
+                    "Fur-lined boots",
+                    "Red scarf"
+                ],
+                "hair": "Frost spray on black hair",
+                "makeup": "Rosy cheeks (cold), white breath effect?",
+                "props": [
+                    "Snow-covered Materia"
+                ],
+                "cost_range": [
+                    210,
+                    340
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Gloves/Gauntlets": 40,
+                    "Wig": 20,
+                    "Boots": 20
+                },
+                "build_sequence": [
+                    "Week 1: Clothing basics",
+                    "Week 2: Make/Buy Gauntlets",
+                    "Week 3: Wig styling",
+                    "Week 4: Fit check"
+                ],
+                "skill_level": "Easy-Medium",
+                "con_day_tips": [
+                    "Athletic poses look best",
+                    "Check suspenders sliding",
+                    "Gauntlets need to be secure"
+                ],
+                "pro_tips": [
+                    "Focus on the gauntlets - they define the fighter look",
+                    "Tank top fit should be athletic"
+                ]
+            }
+        },
+        {
+            "character": "Daenerys Targaryen",
+            "source": "Game of Thrones",
+            "silhouette": {
+                "defining_shape": "Flowing Gown/Cape + Elaborate Platnium Braids",
+                "priority_pieces": [
+                    "Gown/Coat",
+                    "Platinum Wig"
+                ],
+                "time_allocation": 70
+            },
+            "details": {
+                "signature_elements": [
+                    "Dragon accessories",
+                    "Violet eyes?",
+                    "Regal cape"
+                ],
+                "time_allocation": 20
+            },
+            "precision": {
+                "visible_areas": [
+                    "Braid intricacy",
+                    "Fabric drape"
+                ],
+                "hidden_compromises": [
+                    "Shoes under gown",
+                    "Undergarments"
+                ],
+                "time_allocation": 10
+            },
+            "original": {
+                "base": [
+                    "Blue/White tunic dress",
+                    "Cape/Cloak"
+                ],
+                "accessories": [
+                    "Dragon chain/pin",
+                    "Silver boots"
+                ],
+                "hair": "Platinum complex braided wig",
+                "makeup": "Natural, strong brows, pale lip",
+                "props": [
+                    "Dragon Egg or Dragon plush"
+                ],
+                "cost_range": [
+                    190,
+                    330
+                ]
+            },
+            "winter": {
+                "base": [
+                    "White fur coat (Season 8 style)",
+                    "Red sash?"
+                ],
+                "accessories": [
+                    "Leather gloves",
+                    "Heavy boots"
+                ],
+                "hair": "Braids with silver ribbons/frost",
+                "makeup": "Pale, severe wintry look",
+                "props": [
+                    "Frozen Dragon Egg"
+                ],
+                "cost_range": [
+                    290,
+                    510
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Wig": 40,
+                    "Coat/Gown": 40,
+                    "Props": 10
+                },
+                "build_sequence": [
+                    "Week 1: Order Wig (complex)",
+                    "Week 2: Source Coat/Dress",
+                    "Week 3: Braid wig",
+                    "Week 4: Dragon prop"
+                ],
+                "skill_level": "Medium-Hard",
+                "con_day_tips": [
+                    "Wig weight management",
+                    "Watch the train/cape on floor",
+                    "Commanding posture"
+                ],
+                "pro_tips": [
+                    "Wig makes or breaks this - spend $$ here",
+                    "Winter coat version is iconic & warm"
+                ]
+            }
+        },
+        {
+            "character": "Anna",
+            "source": "Frozen",
+            "silhouette": {
+                "defining_shape": "Twin Braids + Cape/Dress + Warm Colors",
+                "priority_pieces": [
+                    "Magenta Cape",
+                    "Blue/Black Dress/Skirt",
+                    "Braids"
+                ],
+                "time_allocation": 60
+            },
+            "details": {
+                "signature_elements": [
+                    "White hair streak",
+                    "Freckles",
+                    "Tulip embroidery"
+                ],
+                "time_allocation": 25
+            },
+            "precision": {
+                "visible_areas": [
+                    "Embroidery patterns",
+                    "Braid neatness"
+                ],
+                "hidden_compromises": [
+                    "Petticoat quality",
+                    "Boots under skirt"
+                ],
+                "time_allocation": 15
+            },
+            "original": {
+                "base": [
+                    "Blue skirt",
+                    "Black bodice",
+                    "Pink/Magenta cape"
+                ],
+                "accessories": [
+                    "Black boots",
+                    "Mittens",
+                    "Beanie?"
+                ],
+                "hair": "Strawberry blonde twin braids with white streak",
+                "makeup": "Freckles, pink cheeks, warm smile",
+                "props": [
+                    "Sunflower or Chocolate"
+                ],
+                "cost_range": [
+                    140,
+                    230
+                ]
+            },
+            "winter": {
+                "base": [
+                    "Coronation Gown (Green/Black)",
+                    "Fur capelet"
+                ],
+                "accessories": [
+                    "Updo hair ribbon",
+                    "Choker"
+                ],
+                "hair": "Bun with braids (Coronation style) + Frost",
+                "makeup": "Warm base with frost highlight",
+                "props": [
+                    "Lantern or Ice skates"
+                ],
+                "cost_range": [
+                    210,
+                    370
+                ]
+            },
+            "teaching": {
+                "budget_allocation": {
+                    "Cape/Embroidery": 40,
+                    "Wig": 20,
+                    "Boots": 20
+                },
+                "build_sequence": [
+                    "Week 1: Base dress/skirt",
+                    "Week 2: Cape fabrication",
+                    "Week 3: Embroidery/Painting",
+                    "Week 4: Wig braids"
+                ],
+                "skill_level": "Medium",
+                "con_day_tips": [
+                    "Cape clasp security",
+                    "Freckles add character!",
+                    "Energetic poses"
+                ],
+                "pro_tips": [
+                    "Fabric paint > Embroidery for speed",
+                    "White streak in wig is essential detail"
+                ]
+            }
+        }
+    ]
+}

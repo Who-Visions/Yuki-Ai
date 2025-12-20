@@ -1,0 +1,135 @@
+{
+    "adhesives": {
+        "foam_to_foam": {
+            "best": "Contact Cement (Barge/Weldwood)",
+            "budget": "Hot Glue (High Temp)",
+            "note": "Contact cement requires ventilation. Coat both sides, wait until tacky."
+        },
+        "foam_to_fabric": {
+            "best": "Spray Adhesive (Super 77) or Contact Cement",
+            "note": "Spray allows for flexibility. Contact cement is stronger."
+        },
+        "fabric_to_fabric": {
+            "best": "Fabric Fusion / Stitch Witchery",
+            "note": "Heat activated. Do not use for stress seams (armpits/crotch)."
+        },
+        "gems_to_fabric": {
+            "best": "E6000 or Gem-Tac",
+            "note": "E6000 is toxic, use ventilation. Gem-Tac is non-toxic but slower cure."
+        },
+        "anything_to_skin": {
+            "best": "Spirit Gum or Pros-Aide",
+            "note": "Always do a patch test for allergies."
+        }
+    },
+    "fabrics": {
+        "flowing": {
+            "examples": [
+                "Chiffon",
+                "Georgette",
+                "Silk Charmeuse",
+                "Rayon"
+            ],
+            "best_for": "Elsa, Frieren, Capes, Gowns",
+            "avoid": "Quilting Cotton",
+            "tip": "French seams are mandatory for sheer fabrics."
+        },
+        "structured": {
+            "examples": [
+                "Cotton Twill",
+                "Wool Suiting",
+                "Gabardine"
+            ],
+            "best_for": "Makima, Military Uniforms, Trenchoats",
+            "avoid": "Cheap Satin",
+            "tip": "Use interfacing to stiffen collars and lapels."
+        },
+        "stretch": {
+            "examples": [
+                "Spandex (4-way)",
+                "Scuba Knit",
+                "Athletic Jersey"
+            ],
+            "best_for": "Bodysuits, Spider-Gwen, Yoruichi",
+            "avoid": "T-shirt Jersey (too thin)",
+            "tip": "Use a zigzag stitch or serger. Straight stitch will pop."
+        },
+        "leather_look": {
+            "examples": [
+                "Vinyl",
+                "Pleather",
+                "Waxed Canvas"
+            ],
+            "best_for": "Armor bases, Belts, Jackets",
+            "avoid": "PVC (sticky)",
+            "tip": "Use a Teflon foot or put tape on your sewing foot to prevent sticking."
+        }
+    },
+    "vendors": [
+        {
+            "category": "Wigs",
+            "tier": "Gold (High Heat/Style)",
+            "names": [
+                "Arda Wigs",
+                "Epic Cosplay"
+            ],
+            "price": "$$"
+        },
+        {
+            "category": "Wigs",
+            "tier": "Budget (Base)",
+            "names": [
+                "MapofBeauty (Amazon)",
+                "Imstyle"
+            ],
+            "price": "$"
+        },
+        {
+            "category": "Contacts",
+            "tier": "Standard",
+            "names": [
+                "PinkyParadise",
+                "Uniqso",
+                "HoneyColor"
+            ],
+            "price": "$$"
+        },
+        {
+            "category": "Foam/Props",
+            "tier": "Pro",
+            "names": [
+                "TNT Cosplay Supply",
+                "Lumin's Workshop"
+            ],
+            "price": "$$"
+        },
+        {
+            "category": "Fabrics",
+            "tier": "Budget",
+            "names": [
+                "Fabric Wholesale Direct",
+                "Joann (with coupons)"
+            ],
+            "price": "$"
+        }
+    ],
+    "checklists": {
+        "con_day_repair_kit": [
+            "Safety Pins (various sizes)",
+            "Superglue (brush-on)",
+            "Fashion Tape",
+            "Needle & Thread (black/white)",
+            "Bobby Pins",
+            "Pain Relievers",
+            "Water Bottle",
+            "Deodorant",
+            "Wig Comb"
+        ],
+        "con_crunch_triage": [
+            "STOP any embroidery or hand-beading immediately.",
+            "Can it be glued instead of sewn? If yes, glue it.",
+            "Can it be weathered to hide mistakes? If yes, add dirt.",
+            "Focus on the WIG and FACE. If those look good, the costume looks good."
+        ]
+    }
+}

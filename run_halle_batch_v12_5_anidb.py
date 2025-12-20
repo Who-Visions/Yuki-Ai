@@ -1,0 +1,77 @@
+import asyncio
+import os
+import aiohttp
+import json
+from pathlib import Path
+from image_gen.v12_5_pipeline import V12_5Pipeline
+
+# Winter 2025 Waifus (Verified Stable URLs from MAL)
+HALLE_WAIFUS = [
+    {"name": "Maomao", "anime": "The Apothecary Diaries", "url": "https://cdn.myanimelist.net/images/characters/16/371204.jpg"},
+    {"name": "Hina Chono", "anime": "Blue Box", "url": "https://cdn.myanimelist.net/images/characters/11/574759.jpg"},
+    {"name": "Emilia", "anime": "Re:Zero", "url": "https://cdn.myanimelist.net/images/characters/16/551926.jpg"},
+    {"name": "Chinatsu Kano", "anime": "Blue Box", "url": "https://cdn.myanimelist.net/images/characters/2/571722.jpg"},
+    {"name": "Sakiko Togawa", "anime": "BanG Dream! Ave Mujica", "url": "https://cdn.myanimelist.net/images/characters/2/515788.jpg"}
+]
+
+HALLE_DIR = Path("C:/Yuki_Local/Cosplay_Lab/Subjects/halle berry")
+OUTPUT_DIR = Path("C:/Yuki_Local/Renders_Halle_V12_5")
+
+async def download_image(session, url, path):
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    try:
+        async with session.get(url, headers=headers, timeout=15) as response:
+            if response.status == 200:
+                content = await response.read()
+                path.write_bytes(content)
+                return True
+    except Exception as e:
+        print(f"      ⚠️ Download error for {url}: {e}")
+    return False
+
+async def run_halle_batch_bulletproof():
+    pipeline = V12_5Pipeline()
+    
+    images = [f for f in HALLE_DIR.glob("*") if f.suffix.lower() in ['.jpg', '.jpeg', '.png', '.webp', '.avif']]
+    if not images:
+        print(f"❌ No subject images found in {HALLE_DIR}")
+        return
+
+    print(f"--- Starting Halle Berry V12.5 BULLETPROOF Batch ---")
+    
+    bypass = False
+    
+    async with aiohttp.ClientSession() as session:
+        for char_info in HALLE_WAIFUS:
+            print(f"\n🚀 Processing: {char_info['name']} ({char_info['anime']})...")
+            try:
+                ref_path = Path(f"temp_halle_v12_5_{char_info['name'].replace(' ', '_').lower()}.jpg")
+                
+                # Download
+                if await download_image(session, char_info['url'], ref_path):
+                    print(f"   ✓ Character reference ready.")
+                    
+                    # Run Pipeline
+                    await pipeline.run(
+                        subject_name="Halle Berry",
+                        target_character=f"{char_info['name']} from {char_info['anime']}",
+                        subject_dir=HALLE_DIR,
+                        reference_path=ref_path,
+                        output_dir=OUTPUT_DIR,
+                        bypass_lock=bypass
+                    )
+                    
+                    bypass = True # Reuse structural lock
+                    
+                    if ref_path.exists():
+                        os.remove(ref_path)
+                else:
+                    print(f"   ❌ Could not download image for {char_info['name']}")
+
+            except Exception as e:
+                print(f"   ❌ Batch Failure for {char_info['name']}: {e}")
+            
+            await asyncio.sleep(1)
+
+if __name__ == "__main__":
+    asyncio.run(run_halle_batch_bulletproof())

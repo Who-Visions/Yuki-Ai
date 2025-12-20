@@ -11,12 +11,15 @@ No MediaPipe dependency - Gemini handles landmark expansion.
 """
 
 import asyncio
+import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
+from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from google.cloud import vision
@@ -33,28 +36,89 @@ FLASH_MODEL = "gemini-3-flash-preview"      # Stage 2: 68-point expansion
 PRO_MODEL = "gemini-3-pro-preview"          # Stage 3: Deep analysis
 IMAGE_MODEL = "gemini-3-pro-image-preview"  # Stage 4: Generation
 
-# Paths
-BASE_DIR = Path("c:/Yuki_Local")
-SUBJECT_DIR = BASE_DIR / "Cosplay_Lab/Subjects/Kai Taylor"
-REF_DIR = BASE_DIR / "Cosplay_Lab/References"
-RENDER_DIR = BASE_DIR / "Cosplay_Lab/Renders/kai_bella_v11"
+# =============================================================================
+# PYDANTIC SCHEMAS (STRUCTURED OUTPUTS)
+# =============================================================================
 
+class LandmarkPoint(BaseModel):
+    index: int = Field(..., description="The 0-67 index of the landmark point.")
+    region: str = Field(..., description="The facial region (e.g., 'jawline', 'eye_left').")
+    x: float = Field(..., description="X coordinate (rounded to 2 decimal places).")
+    y: float = Field(..., description="Y coordinate (rounded to 2 decimal places).")
+    source: str = Field(..., description="How this point was derived (e.g., 'interpolated', 'mapped').")
+
+class MappingConfidence(BaseModel):
+    eyes: float
+    nose: float
+    mouth: float
+    jawline: float
+    overall: float
+
+class KeyProportions(BaseModel):
+    eye_spacing_ratio: float
+    nose_to_chin_ratio: float
+    face_width_height_ratio: float
+
+class FaceGeometry(BaseModel):
+    face_shape: str
+    symmetry_score: float
+    key_proportions: KeyProportions
+
+class LandmarkExpansionResponse(BaseModel):
+    landmarks_68: List[LandmarkPoint]
+    mapping_confidence: MappingConfidence
+    face_geometry: FaceGeometry
+
+# --- Stage 3 Schemas ---
+
+class SubjectInfo(BaseModel):
+    name: str
+    ethnicity: str
+    skin_tone: str
+    age_range: str
+
+class FaceAngles(BaseModel):
+    roll: float
+    pan: float
+    tilt: float
+
+class KeyRatios(BaseModel):
+    eye_width_to_face: float
+    nose_length_to_face: float
+    mouth_width_to_face: float
+    interocular_distance: float
+
+class GeometricSignatures(BaseModel):
+    face_shape: str
+    face_angles: FaceAngles
+    key_ratios: KeyRatios
+
+class FeatureDetails(BaseModel):
+    shape: str
+    description: Optional[str] = None
+    color: Optional[str] = None
+    unique_traits: List[str]
+
+class FeatureSignatures(BaseModel):
+    eyes: FeatureDetails
+    nose: FeatureDetails
+    lips: FeatureDetails
+    bone_structure: Dict[str, str]
+
+class IdentityLockData(BaseModel):
+    subject_info: SubjectInfo
+    geometric_signatures: GeometricSignatures
+    feature_signatures: FeatureSignatures
+    absolute_preserve: List[str] = Field(..., description="List of top 10 features to absolutely preserve.")
+    generation_guidance: str = Field(..., description="Detailed paragraph on how to generate this exact face.")
+
+class IdentityLockResponse(BaseModel):
+    identity_lock: IdentityLockData
+    confidence_score: float
 
 # =============================================================================
 # STAGE 1: CLOUD VISION API - 34 Landmarks + Face Analysis (WITH CACHING)
 # =============================================================================
-
-# Cache directory for Cloud Vision results
-CV_CACHE_DIR = BASE_DIR / "cache/cloud_vision"
-CV_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def _get_file_hash(file_path: Path) -> str:
-    """Generate hash of file content for cache key"""
-    import hashlib
-    with open(file_path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
-
 
 class CloudVisionAnalyzer:
     """
@@ -65,81 +129,58 @@ class CloudVisionAnalyzer:
     """
     
     def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or CV_CACHE_DIR
+        # Use a local cache directory relative to the script if not provided
+        base_dir = Path(__file__).resolve().parent.parent
+        self.cache_dir = cache_dir or (base_dir / "cache/cloud_vision")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self._client = None  # Lazy init to avoid API call on import
+        self._client = None  # Lazy init
     
     @property
     def client(self):
-        """Lazy-load Vision client only when needed"""
         if self._client is None:
             self._client = vision.ImageAnnotatorClient()
         return self._client
     
+    def _get_file_hash(self, file_path: Path) -> str:
+        import hashlib
+        with open(file_path, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
+    
     def _get_cache_path(self, image_path: Path) -> Path:
-        """Get cache file path for an image"""
-        file_hash = _get_file_hash(image_path)
+        file_hash = self._get_file_hash(image_path)
         return self.cache_dir / f"{file_hash}.json"
     
     def _load_from_cache(self, image_path: Path) -> Optional[Dict[str, Any]]:
-        """Load cached result if exists - ALWAYS called first"""
         cache_path = self._get_cache_path(image_path)
         if cache_path.exists():
             try:
                 with open(cache_path, "r", encoding="utf-8") as f:
                     cached = json.load(f)
-                print(f"   💾 CACHE HIT: {image_path.name} (saved ${self._estimate_cost()} API cost)")
+                print(f"   💾 CACHE HIT: {image_path.name}")
                 return cached
-            except (json.JSONDecodeError, IOError) as e:
-                print(f"   ⚠️ Cache read error: {e}")
+            except (json.JSONDecodeError, IOError):
+                pass
         return None
     
     def _save_to_cache(self, image_path: Path, result: Dict[str, Any]) -> None:
-        """Save result to cache"""
         cache_path = self._get_cache_path(image_path)
         try:
             result["_cache_metadata"] = {
                 "source_file": str(image_path),
                 "cached_at": datetime.now().isoformat(),
-                "file_hash": _get_file_hash(image_path)
+                "file_hash": self._get_file_hash(image_path)
             }
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2)
-            print(f"   💾 Cached result: {cache_path.name}")
         except IOError as e:
             print(f"   ⚠️ Cache write error: {e}")
     
-    def _estimate_cost(self) -> str:
-        """Estimate cost saved by cache hit"""
-        # Cloud Vision Face Detection: ~$1.50 per 1000 images
-        return "~$0.0015"
-    
     def detect_face(self, image_path: Path, force_refresh: bool = False) -> Dict[str, Any]:
-        """
-        Detect face using Cloud Vision API (WITH CACHING)
-        
-        FAILSAFE: Cache is ALWAYS checked first. API only called if:
-        1. No cache exists for this image
-        2. force_refresh=True is explicitly set
-        
-        Args:
-            image_path: Path to image file
-            force_refresh: If True, bypass cache and call API
-            
-        Returns:
-            - landmarks_34: Cloud Vision's 34 facial landmarks
-            - bounding_box: face region
-            - face_angles: roll, pan, tilt
-            - emotions: joy, sorrow, anger, surprise
-            - confidence: detection confidence
-        """
-        # ===== FAILSAFE: ALWAYS CHECK CACHE FIRST =====
         if not force_refresh:
             cached = self._load_from_cache(image_path)
             if cached is not None:
                 return cached
         
-        # ===== CACHE MISS: Call Cloud Vision API =====
         print(f"   🔍 Cloud Vision API: Analyzing {image_path.name}...")
         
         with open(image_path, "rb") as f:
@@ -165,7 +206,7 @@ class CloudVisionAnalyzer:
             "height": vertices[2].y - vertices[0].y
         }
         
-        # 34 Landmarks with types
+        # 34 Landmarks
         landmarks = []
         for lm in face.landmarks:
             landmarks.append({
@@ -175,14 +216,13 @@ class CloudVisionAnalyzer:
                 "z": lm.position.z
             })
         
-        # Face angles
+        # Angles & Emotions
         angles = {
             "roll": round(face.roll_angle, 2),
             "pan": round(face.pan_angle, 2),
             "tilt": round(face.tilt_angle, 2)
         }
         
-        # Emotions
         emotions = {
             "joy": face.joy_likelihood.name,
             "sorrow": face.sorrow_likelihood.name,
@@ -200,21 +240,8 @@ class CloudVisionAnalyzer:
         }
         
         print(f"   ✅ Detected {len(landmarks)} landmarks (conf: {face.detection_confidence:.2f})")
-        
-        # ===== SAVE TO CACHE =====
         self._save_to_cache(image_path, result)
-        
         return result
-    
-    def clear_cache(self) -> int:
-        """Clear all cached results. Returns number of files deleted."""
-        import shutil
-        count = len(list(self.cache_dir.glob("*.json")))
-        if count > 0:
-            shutil.rmtree(self.cache_dir)
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
-        print(f"   🗑️ Cleared {count} cached entries")
-        return count
 
 
 # =============================================================================
@@ -244,10 +271,12 @@ Using the Cloud Vision landmarks and the face image, INFER the missing points by
 2. Interpolating missing points based on facial geometry
 3. Using proportional estimation for unmapped regions
 
+IMPORTANT: Round all coordinates to 2 decimal places to save space.
+
 Output JSON ONLY:
 {{
   "landmarks_68": [
-    {{"index": 0, "region": "jawline", "x": <estimated>, "y": <estimated>, "source": "interpolated/mapped"}},
+    {{"index": 0, "region": "jawline", "x": 123.45, "y": 678.90, "source": "interpolated"}},
     ...all 68 points...
   ],
   "mapping_confidence": {{
@@ -268,7 +297,6 @@ Output JSON ONLY:
   }}
 }}"""
 
-
 async def expand_to_68_points(
     client: genai.Client, 
     cv_data: Dict,
@@ -281,34 +309,25 @@ async def expand_to_68_points(
     
     prompt = EXPANSION_PROMPT.format(cv_data=json.dumps(cv_data, indent=2))
     
-    response = await client.aio.models.generate_content(
-        model=FLASH_MODEL,
-        contents=[prompt] + image_parts,
-        config=types.GenerateContentConfig(
-            temperature=0.1,
-            max_output_tokens=6000
-        )
-    )
-    
-    text = response.text.strip()
-    text = re.sub(r'^```json\s*', '', text)
-    text = re.sub(r'^```\s*', '', text)
-    text = re.sub(r'\s*```$', '', text)
-    
     try:
-        expansion = json.loads(text)
-        conf = expansion.get("mapping_confidence", {}).get("overall", "N/A")
-        print(f"   ✅ Expanded to 68 points (confidence: {conf})")
-        return expansion
-    except json.JSONDecodeError:
-        start = text.find('{')
-        end = text.rfind('}') + 1
-        if start >= 0 and end > start:
-            expansion = json.loads(text[start:end])
-            print(f"   ✅ Expanded (with cleanup)")
-            return expansion
-        print(f"   ⚠️ Failed to parse")
-        return {"raw": text}
+        response = await client.aio.models.generate_content(
+            model=FLASH_MODEL,
+            contents=[prompt] + image_parts,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=LandmarkExpansionResponse,
+                temperature=0.1,
+                max_output_tokens=6000
+            )
+        )
+        
+        result = LandmarkExpansionResponse.model_validate_json(response.text)
+        print(f"   ✅ Expanded to 68 points (confidence: {result.mapping_confidence.overall})")
+        return result.model_dump()
+            
+    except Exception as e:
+        print(f"   ❌ Stage 2 Failed: {e}")
+        return {}
 
 
 # =============================================================================
@@ -333,7 +352,7 @@ Output JSON:
 {{
   "identity_lock": {{
     "subject_info": {{
-      "name": "Kai Taylor",
+      "name": "{subject_name}",
       "ethnicity": "<precise>",
       "skin_tone": "<fitzpatrick I-VI + hex color>",
       "age_range": "<years>"
@@ -388,9 +407,9 @@ Output JSON:
 
 Be EXTREMELY precise. This identity lock controls image generation fidelity."""
 
-
 async def deep_analysis_pro(
     client: genai.Client,
+    subject_name: str,
     cv_data: Dict,
     expansion_data: Dict,
     image_parts: List[types.Part]
@@ -401,38 +420,30 @@ async def deep_analysis_pro(
     print(f"{'='*60}")
     
     prompt = ANALYSIS_PROMPT.format(
+        subject_name=subject_name,
         cv_data=json.dumps(cv_data, indent=2),
         expansion_data=json.dumps(expansion_data, indent=2)
     )
     
-    response = await client.aio.models.generate_content(
-        model=PRO_MODEL,
-        contents=[prompt] + image_parts,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            max_output_tokens=8000
-        )
-    )
-    
-    text = response.text.strip()
-    text = re.sub(r'^```json\s*', '', text)
-    text = re.sub(r'^```\s*', '', text)
-    text = re.sub(r'\s*```$', '', text)
-    
     try:
-        analysis = json.loads(text)
-        conf = analysis.get("confidence_score", "N/A")
-        print(f"   ✅ Deep analysis complete (confidence: {conf})")
-        return analysis
-    except json.JSONDecodeError:
-        start = text.find('{')
-        end = text.rfind('}') + 1
-        if start >= 0 and end > start:
-            analysis = json.loads(text[start:end])
-            print(f"   ✅ Analysis complete (with cleanup)")
-            return analysis
-        print(f"   ⚠️ Failed to parse")
-        return {"raw": text}
+        response = await client.aio.models.generate_content(
+            model=PRO_MODEL,
+            contents=[prompt] + image_parts,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=IdentityLockResponse,
+                temperature=0.2,
+                max_output_tokens=8000
+            )
+        )
+        
+        result = IdentityLockResponse.model_validate_json(response.text)
+        print(f"   ✅ Identity Lock created (confidence: {result.confidence_score})")
+        return result.model_dump()
+        
+    except Exception as e:
+        print(f"   ❌ Stage 3 Failed: {e}")
+        return {}
 
 
 # =============================================================================
@@ -441,9 +452,12 @@ async def deep_analysis_pro(
 
 async def generate_image(
     client: genai.Client,
+    subject_name: str,
     identity_lock: Dict,
     reference_path: Path,
-    subject_parts: List[types.Part]
+    subject_parts: List[types.Part],
+    aspect_ratio: str = "9:16",
+    full_body: bool = False
 ) -> Optional[bytes]:
     """Stage 4: Image generation with Gemini 3 Pro Image"""
     print(f"\n{'='*60}")
@@ -456,30 +470,37 @@ async def generate_image(
     features = lock.get("feature_signatures", {})
     guidance = lock.get("generation_guidance", "")
     
+    framing = "FULL BODY SHOT (Head to Toe MUST be visible)" if full_body else "Cinematic Portrait"
+    
     generation_prompt = f"""COSPLAY GENERATION WITH V11 IDENTITY LOCK
-
-🔒 IDENTITY LOCK ACTIVE
-
-ABSOLUTE PRESERVE (NEVER CHANGE):
-{chr(10).join(f'• {p}' for p in absolute_preserve[:10])}
-
-FEATURE SIGNATURES:
-• Eyes: {json.dumps(features.get('eyes', {}), indent=2)}
-• Nose: {json.dumps(features.get('nose', {}), indent=2)}
-• Lips: {json.dumps(features.get('lips', {}), indent=2)}
-• Bone Structure: {json.dumps(features.get('bone_structure', {}), indent=2)}
-
-GENERATION GUIDANCE:
-{guidance}
-
-🎬 TASK:
-Generate the SUBJECT (from subject photos) wearing the COSTUME from the reference.
-- FACE = Subject identity (Kai Taylor) - MUST match subject photos exactly
-- POSE/BODY = Can adapt to reference
-- COSTUME/CLOTHES = From reference image only
-- DO NOT blend or use reference person's facial features
-
-Output a single high-quality photorealistic image."""
+    
+    🔒 IDENTITY LOCK ACTIVE FOR: {subject_name}
+    
+    ABSOLUTE PRESERVE (NEVER CHANGE):
+    {chr(10).join(f'• {p}' for p in absolute_preserve[:10])}
+    
+    FEATURE SIGNATURES:
+    • Eyes: {json.dumps(features.get('eyes', {}), indent=2)}
+    • Nose: {json.dumps(features.get('nose', {}), indent=2)}
+    • Lips: {json.dumps(features.get('lips', {}), indent=2)}
+    • Bone Structure: {json.dumps(features.get('bone_structure', {}), indent=2)}
+    
+    GENERATION GUIDANCE:
+    {guidance}
+    
+    🎬 TECHNICAL SPECS:
+    - FRAMING: {framing}
+    - ASPECT RATIO: {aspect_ratio}
+    - STYLE: Photorealistic, professional photography, movie lighting.
+    
+    🎬 TASK:
+    Generate {subject_name} (from subject photos) wearing the COSTUME from the reference.
+    - FACE = Subject identity ({subject_name}) - MUST match subject photos exactly
+    - POSE/BODY = Can adapt to reference
+    - COSTUME/CLOTHES = From reference image only
+    - DO NOT blend or use reference person's facial features
+    
+    Output a single high-quality photorealistic image."""
 
     # Load reference
     with open(reference_path, "rb") as f:
@@ -497,20 +518,23 @@ Output a single high-quality photorealistic image."""
     
     print(f"   🚀 Generating with {IMAGE_MODEL}...")
     
-    response = await client.aio.models.generate_content(
-        model=IMAGE_MODEL,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            response_modalities=['IMAGE', 'TEXT'],
-            temperature=1.0
+    try:
+        response = await client.aio.models.generate_content(
+            model=IMAGE_MODEL,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_modalities=['IMAGE', 'TEXT'],
+                temperature=1.0
+            )
         )
-    )
-    
-    if response.candidates and response.candidates[0].content:
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, 'inline_data') and part.inline_data:
-                print(f"   ✅ Image generated successfully")
-                return part.inline_data.data
+        
+        if response.candidates and response.candidates[0].content:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data:
+                    print(f"   ✅ Image generated successfully")
+                    return part.inline_data.data
+    except Exception as e:
+        print(f"   ❌ Generation Error: {e}")
     
     print(f"   ❌ Generation failed")
     return None
@@ -530,83 +554,90 @@ class V11Pipeline:
     
     async def run(
         self,
+        subject_name: str,
         subject_dir: Path,
         reference_path: Path,
-        output_dir: Optional[Path] = None
+        output_dir: Path,
+        aspect_ratio: str = "9:16",
+        full_body: bool = False,
+        bypass_lock: bool = False
     ) -> Optional[Path]:
-        """
-        Run full V11 pipeline
         
-        Args:
-            subject_dir: Directory with subject photos
-            reference_path: Path to reference/costume image
-            output_dir: Where to save output
-            
-        Returns:
-            Path to generated image or None
-        """
-        output_dir = output_dir or RENDER_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = re.sub(r'[^a-zA-Z0-9]', '_', subject_name).lower()
+        lock_path = output_dir / f"v11_lock_{safe_name}.json"
         
         print("=" * 70)
         print("⚡ V11 PIPELINE: Cloud Vision + Gemini 3 ⚡")
         print("=" * 70)
-        print(f"   Subject: {subject_dir}")
-        print(f"   Reference: {reference_path}")
-        print(f"   Output: {output_dir}")
+        print(f"   Subject Name: {subject_name}")
+        print(f"   Subject Dir:  {subject_dir}")
+        print(f"   Reference:    {reference_path}")
+        print(f"   Output Dir:   {output_dir}")
+        print(f"   Aspect Ratio: {aspect_ratio}")
         
         # Load subject images
-        subject_images = sorted(list(subject_dir.glob("kai_new_*.jpg")))[:4]
+        # Try finding images with the subject name first, else all jpgs
+        subject_images = sorted(list(subject_dir.glob(f"*{subject_name.split()[0].lower()}*.jpg")))[:4]
         if not subject_images:
             subject_images = sorted(list(subject_dir.glob("*.jpg")))[:4]
+            if not subject_images:
+                subject_images = sorted(list(subject_dir.glob("*.png")))[:4]
+        
+        if not subject_images:
+            print(f"❌ No suitable images found in {subject_dir}")
+            return None
         
         print(f"\n📸 Loading {len(subject_images)} subject photos...")
-        
         subject_parts = []
         for img in subject_images:
+            mime = "image/jpeg" if img.suffix.lower() in [".jpg", ".jpeg"] else "image/png"
             with open(img, "rb") as f:
-                subject_parts.append(types.Part.from_bytes(data=f.read(), mime_type="image/jpeg"))
+                subject_parts.append(types.Part.from_bytes(data=f.read(), mime_type=mime))
             print(f"   ✓ {img.name}")
+            
+        # Identity Lock Handling
+        identity_lock = None
+        if bypass_lock and lock_path.exists():
+            print(f"\n🔓 BYPASS: Loading existing identity lock: {lock_path}")
+            with open(lock_path, "r", encoding="utf-8") as f:
+                identity_lock = json.load(f)
         
-        # ===== STAGE 1: Cloud Vision (34 landmarks) =====
-        print(f"\n{'='*60}")
-        print(f"👁️ STAGE 1: Cloud Vision API")  
-        print(f"{'='*60}")
-        cv_data = self.cv_analyzer.detect_face(subject_images[0])
-        
-        # ===== STAGE 2: Gemini Flash (68-point expansion) =====
-        expansion_data = await expand_to_68_points(self.client, cv_data, subject_parts)
-        
-        # ===== STAGE 3: Gemini Pro (deep analysis) =====
-        identity_lock = await deep_analysis_pro(
-            self.client, cv_data, expansion_data, subject_parts
-        )
-        
-        # Save identity lock
-        lock_path = output_dir / "v11_identity_lock.json"
-        identity_lock["_metadata"] = {
-            "created": datetime.now().isoformat(),
-            "version": "V11",
-            "stages": {
-                "stage1": "Cloud Vision API (34 landmarks)",
-                "stage2": f"{FLASH_MODEL} (68-point expansion)",
-                "stage3": f"{PRO_MODEL} (deep analysis)",
-                "stage4": f"{IMAGE_MODEL} (generation)"
+        if not identity_lock:
+            # ===== STAGE 1: Cloud Vision (34 landmarks) =====
+            print(f"\n{'='*60}")
+            print(f"👁️ STAGE 1: Cloud Vision API")  
+            print(f"{'='*60}")
+            cv_data = self.cv_analyzer.detect_face(subject_images[0])
+            
+            # ===== STAGE 2: Gemini Flash (68-point expansion) =====
+            expansion_data = await expand_to_68_points(self.client, cv_data, subject_parts)
+            
+            # ===== STAGE 3: Gemini Pro (deep analysis) =====
+            identity_lock = await deep_analysis_pro(
+                self.client, subject_name, cv_data, expansion_data, subject_parts
+            )
+            
+            # Save identity lock
+            identity_lock["_metadata"] = {
+                "created": datetime.now().isoformat(),
+                "version": "V11",
+                "subject": subject_name
             }
-        }
-        with open(lock_path, "w", encoding="utf-8") as f:
-            json.dump(identity_lock, f, indent=2)
-        print(f"\n💾 Saved identity lock: {lock_path}")
+            with open(lock_path, "w", encoding="utf-8") as f:
+                json.dump(identity_lock, f, indent=2)
+            print(f"\n💾 Saved identity lock: {lock_path}")
         
         # ===== STAGE 4: Gemini Pro Image (generation) =====
         image_data = await generate_image(
-            self.client, identity_lock, reference_path, subject_parts
+            self.client, subject_name, identity_lock, reference_path, subject_parts,
+            aspect_ratio=aspect_ratio, full_body=full_body
         )
         
         if image_data:
             ref_name = reference_path.stem[:20].replace(" ", "_")
             timestamp = datetime.now().strftime("%H%M%S")
-            out_path = output_dir / f"v11_{ref_name}_{timestamp}.png"
+            out_path = output_dir / f"v11_{safe_name}_as_{ref_name}_{timestamp}.png"
             with open(out_path, "wb") as f:
                 f.write(image_data)
             print(f"\n✅ V11 PIPELINE COMPLETE")
@@ -615,60 +646,47 @@ class V11Pipeline:
         
         print(f"\n❌ Pipeline failed at generation stage")
         return None
-    
-    async def batch_run(
-        self,
-        subject_dir: Path,
-        reference_paths: List[Path],
-        output_dir: Optional[Path] = None,
-        delay_seconds: int = 10
-    ) -> List[Path]:
-        """Run pipeline on multiple references"""
-        output_dir = output_dir or RENDER_DIR
-        results = []
-        
-        for i, ref in enumerate(reference_paths, 1):
-            print(f"\n{'#'*70}")
-            print(f"# BATCH {i}/{len(reference_paths)}: {ref.name}")
-            print(f"{'#'*70}")
-            
-            try:
-                result = await self.run(subject_dir, ref, output_dir)
-                if result:
-                    results.append(result)
-            except Exception as e:
-                print(f"   ❌ Error: {e}")
-            
-            if i < len(reference_paths):
-                print(f"\n⏳ Waiting {delay_seconds}s...")
-                await asyncio.sleep(delay_seconds)
-        
-        return results
-
 
 # =============================================================================
 # CLI
 # =============================================================================
 
 async def main():
-    """Run V11 pipeline on Kai Taylor"""
-    pipeline = V11Pipeline()
+    parser = argparse.ArgumentParser(description="V11 Cosplay Generator (Generic)")
     
-    # Get references
-    refs = sorted(list(REF_DIR.glob("*.jpg")))[:3]
+    parser.add_argument("--name", type=str, required=True, help="Name of the subject (e.g., 'Kai Taylor')")
+    parser.add_argument("--subject_dir", type=str, required=True, help="Directory containing subject photos")
+    parser.add_argument("--ref", type=str, required=True, help="Path to reference/costume image")
+    parser.add_argument("--output", type=str, default="Renders_V11", help="Output directory")
+    parser.add_argument("--aspect_ratio", type=str, default="9:16", help="Target aspect ratio (e.g., '9:16', '1:1')")
+    parser.add_argument("--full_body", action="store_true", help="Request a full body shot")
+    parser.add_argument("--bypass_lock", action="store_true", help="Bypass analysis and use existing identity lock if available")
+    parser.add_argument("--project_id", type=str, default=PROJECT_ID, help="Google Cloud Project ID")
     
-    if not refs:
-        print("❌ No reference images found")
+    args = parser.parse_args()
+    
+    subject_path = Path(args.subject_dir)
+    ref_path = Path(args.ref)
+    out_path = Path(args.output)
+    
+    if not subject_path.exists():
+        print(f"❌ Subject directory not found: {subject_path}")
         return
-    
-    print(f"Found {len(refs)} references")
-    
-    # Run on first reference
-    result = await pipeline.run(SUBJECT_DIR, refs[0])
-    
-    if result:
-        print(f"\n🎉 Success! Check: {result}")
+    if not ref_path.exists():
+        print(f"❌ Reference image not found: {ref_path}")
+        return
 
+    pipeline = V11Pipeline(project_id=args.project_id)
+    
+    await pipeline.run(
+        subject_name=args.name,
+        subject_dir=subject_path,
+        reference_path=ref_path,
+        output_dir=out_path,
+        aspect_ratio=args.aspect_ratio,
+        full_body=args.full_body,
+        bypass_lock=args.bypass_lock
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())

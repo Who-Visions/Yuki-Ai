@@ -247,7 +247,7 @@ class JikanClient:
         await self._enforce_rate_limit()
         
         # Make request
-        url = urljoin(self.BASE_URL, endpoint)
+        url = f"{self.BASE_URL}{endpoint}"
         start_time = time.time()
         
         try:

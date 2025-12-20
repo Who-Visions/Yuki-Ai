@@ -17,6 +17,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
 import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 print("FOX FIRE: Yuki API Starting...", flush=True)
 import uuid
@@ -29,6 +33,26 @@ from google.genai import types
 import google.auth
 import google.auth.transport.requests
 import requests
+import firebase_admin
+from firebase_admin import credentials, auth as firebase_auth
+
+# Initialize Firebase Admin
+try:
+    service_account_info = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
+    if service_account_info:
+        cred_dict = json.loads(service_account_info)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+        print("🔥 Firebase Admin Initialized from ENV")
+    else:
+        # Fallback to file for local dev if env not set
+        cred_path = "c:/Yuki_Local/serviceAccountKey.json"
+        if os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            print("🔥 Firebase Admin Initialized from File")
+except Exception as e:
+    print(f"⚠️ Firebase Admin Init Failed: {e}")
 
 # Import Yuki's Agent Tools
 from tools import (
