@@ -121,5 +121,41 @@
     "thoughts_tokens": 1068,
     "cost_usd": 0.08094,
     "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-21T01:42:10.425272",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 3234,
+    "tokens_out": 117,
+    "thoughts_tokens": 328,
+    "cost_usd": 0.011808,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-21T01:43:04.006396",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 3234,
+    "tokens_out": 149,
+    "thoughts_tokens": 451,
+    "cost_usd": 0.013668,
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-21T03:10:52.702375",
+    "project_id": "gifted-cooler-479623-r7",
+    "model": "gemini-3-pro-preview",
+    "operation": "chat_completion",
+    "count": 1,
+    "tokens_in": 3234,
+    "tokens_out": 168,
+    "thoughts_tokens": 344,
+    "cost_usd": 0.012612,
+    "metadata": {}
   }
 ]

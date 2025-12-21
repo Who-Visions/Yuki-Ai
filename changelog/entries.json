@@ -1,6 +1,13 @@
 {
     "entries": [
         {
+            "id": "2025-12-21-backend-chat-fix",
+            "date": "2025-12-21",
+            "type": "fix",
+            "title": "Backend Chat Endpoint Fix",
+            "description": "Merged yuki_openai_server logic into main server.py. Added /v1/chat/completions endpoint to support React-Native ChatSidebar integration. Fixed 404 error."
+        },
+        {
             "id": "2025-12-18-codebase-reorg",
             "date": "2025-12-18",
             "type": "improvement",

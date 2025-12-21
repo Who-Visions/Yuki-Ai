@@ -23,6 +23,7 @@ yarn-error.log*
 # Secrets
 serviceAccountKey.json
 client_secret.json
+mal_credentials.json
 
 # Python
 __pycache__/
