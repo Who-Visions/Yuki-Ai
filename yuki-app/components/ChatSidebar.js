@@ -80,13 +80,18 @@ export function ChatSidebar({ isOpen, onClose }) {
         setIsLoading(true);
 
         try {
-            // Cloud Run API Call
-            const response = await fetch('https://yuki-ai-3tasud2htq-uc.a.run.app/chat', {
+            // Local Backend Call (OpenAI Compatible)
+            const response = await fetch('http://localhost:8000/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: userMsg.text }),
+                body: JSON.stringify({
+                    model: "yuki",
+                    messages: [
+                        { role: "user", content: userMsg.text }
+                    ]
+                }),
             });
 
             if (!response.ok) {
@@ -95,8 +100,8 @@ export function ChatSidebar({ isOpen, onClose }) {
 
             const data = await response.json();
 
-            // Adapt response based on unknown schema (fallback to .message or .response)
-            const aiText = data.response || data.message || data.text || "I'm not sure what you mean.";
+            // Extract content from OpenAI response format
+            const aiText = data.choices?.[0]?.message?.content || "I'm not sure what you mean.";
 
             setMessages(prev => [...prev, {
                 id: Date.now() + 1,

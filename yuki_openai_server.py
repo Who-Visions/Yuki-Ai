@@ -15,7 +15,7 @@ import datetime
 
 # Import Yuki's Tools and Prompt
 print("DEBUG: Importing tools...", flush=True)
-from tools import (
+from yuki_tools import (
     get_current_time,
     add_numbers,
     generate_cosplay_image,
