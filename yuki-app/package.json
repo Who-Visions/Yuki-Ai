@@ -12,6 +12,7 @@
     "@expo/metro-runtime": "~4.0.1",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "~14.0.4",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-google-signin/google-signin": "^16.0.0",
     "@tamagui/babel-plugin": "^1.141.5",
     "@tamagui/config": "^1.141.5",

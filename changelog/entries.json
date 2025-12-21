@@ -1,6 +1,13 @@
 {
     "entries": [
         {
+            "id": "2025-12-21-persistent-user-features",
+            "date": "2025-12-21",
+            "type": "new",
+            "title": "Persistent User Features & Credits System",
+            "description": "Implemented persistent authentication, user-specific image gallery with secure naming, profile dropdown, full chat interface, and a persistent credit system with billing integration."
+        },
+        {
             "id": "2025-12-21-backend-chat-fix",
             "date": "2025-12-21",
             "type": "fix",

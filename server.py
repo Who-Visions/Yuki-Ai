@@ -11,6 +11,7 @@ import logging
 from typing import Optional, Dict, Any, List, Union
 
 # Import Yuki Agent
+import sqlite3
 from agent import YukiAgent
 from yuki_tools import (
     get_current_time,
@@ -167,7 +168,7 @@ async def run_generation_script(input_path: str, request_id: str):
             "python", SCRIPT_PATH,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={**os.environ, "YUKI_INPUT_IMAGE": input_path} 
+            env={**os.environ, "YUKI_INPUT_IMAGE": input_path, "YUKI_USER_EMAIL": "whoentertains@gmail.com"} # Hardcoded for now, should come from request 
         )
         
         stdout, stderr = await process.communicate()
@@ -396,6 +397,84 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
 @app.get("/health")
 def health_check():
     return {"status": "online", "system": "Yuki AI Server", "agent_status": "ready" if yuki_agent else "offline"}
+
+@app.get("/v1/user/images")
+async def get_user_images(email: str):
+    try:
+        conn = sqlite3.connect(r"C:\Yuki_Local\Cosplay_Lab\Brain\yuki_memory.db")
+        cursor = conn.cursor()
+        
+        # 1. Get Subject ID from email
+        cursor.execute("SELECT id, name FROM subjects WHERE email = ?", (email,))
+        subject = cursor.fetchone()
+        
+        if not subject:
+             return {"images": [], "message": "User not found"}
+             
+        subject_id = subject[0]
+        
+        # 2. Get Images for Subject
+        # Joining with updated logic if needed, but simple query first
+        cursor.execute("""
+            SELECT filename, prompt, timestamp 
+            FROM generation_log 
+            WHERE subject_id = ? 
+            ORDER BY timestamp DESC
+        """, (subject_id,))
+        
+        rows = cursor.fetchall()
+        
+        images = []
+        for row in rows:
+            filename = row[0]
+            # Construct accessible URL
+            url = f"http://localhost:8083/{filename}"
+            images.append({
+                "filename": filename,
+                "prompt": row[1],
+                "timestamp": row[2],
+                "uri": url,
+                "id": filename # use filename as ID
+            })
+            
+        conn.close()
+        return {"images": images}
+        
+    except Exception as e:
+        logger.error(f"Error fetching user images: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def get_subject_credits(subject_id):
+    conn = sqlite3.connect(r"C:\Yuki_Local\Cosplay_Lab\Brain\yuki_memory.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT credits FROM subjects WHERE id = ?", (subject_id,))
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else 0
+
+def deduct_credits(subject_id, amount=10):
+    conn = sqlite3.connect(r"C:\Yuki_Local\Cosplay_Lab\Brain\yuki_memory.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE subjects SET credits = credits - ? WHERE id = ?", (amount, subject_id))
+    conn.commit()
+    conn.close()
+
+def get_subject_id_by_email(email):
+    conn = sqlite3.connect(r"C:\Yuki_Local\Cosplay_Lab\Brain\yuki_memory.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM subjects WHERE email = ?", (email,))
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
+
+@app.get("/v1/user/credits")
+async def get_user_credits(email: str):
+    subject_id = get_subject_id_by_email(email)
+    if not subject_id:
+        return {"credits": 0}
+    credits = get_subject_credits(subject_id)
+    return {"credits": credits}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

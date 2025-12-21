@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, Dimensions, StatusBar, Alert, useWindowDimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
 import { Theme } from '../components/Theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +9,7 @@ import { Bell, Search, Sparkles, Flame, Star, AlertCircle, Camera, Bookmark, Use
 import { FULL_CHARACTER_POOL } from './data/all_characters';
 import { ChatSidebar } from '../components/ChatSidebar';
 import { NotificationsPopup } from '../components/NotificationsPopup';
+import { ProfileDropdown } from '../components/ProfileDropdown';
 
 const { width } = Dimensions.get('window');
 
@@ -385,6 +388,41 @@ export default function HomeScreen() {
         setFeatured(activeSet);
     }, []);
 
+    const { user, signIn, signOut } = useAuth();
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [userImages, setUserImages] = useState([]);
+
+    React.useEffect(() => {
+        if (user?.email) {
+            loadCachedImages(user.email);
+            fetchUserImages(user.email);
+        }
+    }, [user]);
+
+    const loadCachedImages = async (email) => {
+        try {
+            const cached = await AsyncStorage.getItem(`user_images_${email}`);
+            if (cached) {
+                setUserImages(JSON.parse(cached));
+            }
+        } catch (e) {
+            console.log('Failed to load cached images', e);
+        }
+    };
+
+    const fetchUserImages = async (email) => {
+        try {
+            const response = await fetch(`http://localhost:8000/v1/user/images?email=${email}`);
+            const data = await response.json();
+            if (data.images) {
+                setUserImages(data.images);
+                AsyncStorage.setItem(`user_images_${email}`, JSON.stringify(data.images)).catch(e => console.log('Cache save failed', e));
+            }
+        } catch (error) {
+            console.error('Failed to fetch user images:', error);
+        }
+    };
+
     const handleCharacterPress = (char) => {
         let imageUri = '';
         if (typeof char.image === 'number') {
@@ -400,6 +438,15 @@ export default function HomeScreen() {
             pathname: '/generate',
             params: { imageUri }
         });
+    };
+
+    const handleProfilePress = () => {
+        if (user) {
+            setIsProfileOpen(!isProfileOpen);
+        } else {
+            signIn('whoentertains@gmail.com');
+            Alert.alert('Welcome Back!', 'Signed in as Dave.');
+        }
     };
 
     return (
@@ -424,14 +471,14 @@ export default function HomeScreen() {
                     {/* Right Actions Group */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                         {/* Credits Button */}
-                        <TouchableOpacity style={styles.creditsButton}>
+                        <TouchableOpacity style={styles.creditsButton} onPress={() => router.push('/subscription')}>
                             <Coins color="#FFD700" size={14} />
-                            <Text style={styles.creditsText}>2400 Credits</Text>
+                            <Text style={styles.creditsText}>{user?.credits !== undefined ? user.credits : 0} Credits</Text>
                         </TouchableOpacity>
 
-                        {/* Sign In Button */}
-                        <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/')}>
-                            <Text style={styles.signInText}>Sign In</Text>
+                        {/* Sign In / Profile Button */}
+                        <TouchableOpacity style={[styles.signInButton, user && { backgroundColor: '#FFD700', paddingHorizontal: 12 }]} onPress={handleProfilePress}>
+                            <Text style={[styles.signInText, user && { color: '#000', fontWeight: 'bold' }]}>{user ? user.name : "Sign In"}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.notificationButton} onPress={() => setIsNotificationsOpen(!isNotificationsOpen)}>
@@ -483,6 +530,45 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={[styles.responsiveContainer, { width: '100%' }]}>
+
+                    {/* Your Creations Section */}
+                    {user && userImages.length > 0 && (
+                        <View>
+                            <View style={styles.sectionHeader}>
+                                <Text style={[styles.sectionTitle, { fontSize: sectionTitleSize }]}>Your Creations</Text>
+                                <TouchableOpacity onPress={() => router.push('/my-images')}>
+                                    <Text style={styles.seeAllText}>See All</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.featuredContainer}
+                                decelerationRate="fast"
+                            >
+                                {userImages.map((img) => (
+                                    <TouchableOpacity
+                                        key={img.id}
+                                        style={[styles.featuredCard, { width: featuredCardWidth, height: featuredCardHeight }]}
+                                        onPress={() => router.push({ pathname: '/generate', params: { imageUri: img.uri } })}
+                                    >
+                                        <Image
+                                            source={{ uri: img.uri }}
+                                            style={styles.featuredImage}
+                                            resizeMode="cover"
+                                        />
+                                        <LinearGradient
+                                            colors={['transparent', 'rgba(0,0,0,0.9)']}
+                                            style={styles.cardGradient}
+                                        />
+                                        <View style={[styles.cardContent, isDesktop && { bottom: 10, left: 10 }]}>
+                                            <Text style={[styles.charName, isDesktop && { fontSize: 14 }]} numberOfLines={1}>{img.prompt}</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    )}
 
                     {/* Featured Section */}
                     <View style={styles.sectionHeader}>
@@ -562,6 +648,7 @@ export default function HomeScreen() {
                 </View>
             </View>
 
+            {isProfileOpen && <ProfileDropdown onClose={() => setIsProfileOpen(false)} onSignOut={signOut} />}
             <ChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
         </View>
     );

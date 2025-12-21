@@ -460,12 +460,74 @@ class V12Pipeline:
         image_data = await generate_image(self.client, subject_name, target_character, identity_lock, reference_path, subject_parts)
         
         if image_data:
-            char_safe = target_character.replace(" ", "_").lower()
-            timestamp = datetime.now().strftime("%H%M%S")
-            out_path = output_dir / f"v12_{safe_name}_as_{char_safe}_{timestamp}.png"
-            with open(out_path, "wb") as f:
-                f.write(image_data)
-            print(f"\n🎉 V12 Success: {out_path}")
+            # --- DB & SECURE FILENAME LOGGING ---
+            try:
+                import sqlite3
+                import os
+                
+                email = os.environ.get("YUKI_USER_EMAIL")
+                subject_id = None
+                
+                if email:
+                    db_path = Path("C:/Yuki_Local/Cosplay_Lab/Brain/yuki_memory.db")
+                    if db_path.exists():
+                        conn = sqlite3.connect(db_path)
+                        cursor = conn.cursor()
+                        
+                        # Find Subject ID
+                        cursor.execute("SELECT id FROM subjects WHERE email = ?", (email,))
+                        row = cursor.fetchone()
+                        if row:
+                            subject_id = row[0]
+                        else:
+                            # Fallback to name
+                            cursor.execute("SELECT id FROM subjects WHERE name LIKE ?", (f"%{subject_name}%",))
+                            row = cursor.fetchone()
+                            if row:
+                                subject_id = row[0]
+                        conn.close()
+
+                # Secure Filename Logic
+                char_slug = target_character.replace(" ", "_").lower()
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                
+                if subject_id:
+                    filename = f"gen_u{subject_id}_{char_slug}_{timestamp}.png"
+                else:
+                    # Fallback if no user linked (shouldn't happen for auth'd users)
+                    safe_subject = re.sub(r'[^a-zA-Z0-9]', '_', subject_name).lower()
+                    filename = f"gen_{safe_subject}_{char_slug}_{timestamp}.png"
+
+                out_path = output_dir / filename
+                with open(out_path, "wb") as f:
+                    f.write(image_data)
+                print(f"\n🎉 V12 Success: {out_path}")
+
+                # Log to DB
+                if subject_id:
+                    conn = sqlite3.connect(db_path)
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT INTO generation_log (subject_id, filename, prompt, status, confidence_score, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        subject_id, 
+                        filename, 
+                        f"{subject_name} as {target_character}", 
+                        "SUCCESS_V12_SECURE", 
+                        identity_lock.get("confidence_score", 1.0) if identity_lock else 0.0,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    ))
+                    conn.commit()
+                    print(f"   💾 Logged to DB for subject_id {subject_id}")
+                    conn.close()
+                    
+            except Exception as e:
+                print(f"   ❌ DB Logging/Saving Error: {e}")
+                # Fallback save if DB failed but image exists
+                if image_data and 'filename' not in locals():
+                     with open(output_dir / f"fallback_{timestamp}.png", "wb") as f:
+                        f.write(image_data)
 
 async def main():
     parser = argparse.ArgumentParser(description="V12 Cosplay Generator (Structured)")

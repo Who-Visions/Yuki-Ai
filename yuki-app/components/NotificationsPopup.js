@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Theme } from './Theme';
 import { Info, Star, MessageSquare, Bell, X } from 'lucide-react-native';
 
@@ -12,7 +13,8 @@ const NOTIFICATIONS = [
         time: 'Just now',
         read: false,
         icon: Info,
-        color: '#3B82F6'
+        color: '#3B82F6',
+        route: '/upload'
     },
     {
         id: '2',
@@ -22,7 +24,8 @@ const NOTIFICATIONS = [
         time: '2 hours ago',
         read: true,
         icon: Star,
-        color: '#FFD700'
+        color: '#FFD700',
+        route: '/generate'
     },
     {
         id: '3',
@@ -32,11 +35,27 @@ const NOTIFICATIONS = [
         time: '1 day ago',
         read: true,
         icon: MessageSquare,
-        color: '#10B981'
+        color: '#10B981',
+        route: '/chat'
     }
 ];
 
 export function NotificationsPopup({ onClose }) {
+    const router = useRouter();
+
+    const handlePress = (item) => {
+        try {
+            if (item.route) {
+                router.push(item.route);
+                onClose();
+            }
+        } catch (error) {
+            console.warn('Navigation failed for notification:', item.id, error);
+            // Fallback: just close
+            onClose();
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -48,7 +67,11 @@ export function NotificationsPopup({ onClose }) {
 
             <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
                 {NOTIFICATIONS.map((item) => (
-                    <TouchableOpacity key={item.id} style={[styles.card, !item.read && styles.unreadCard]}>
+                    <TouchableOpacity
+                        key={item.id}
+                        style={[styles.card, !item.read && styles.unreadCard]}
+                        onPress={() => handlePress(item)}
+                    >
                         <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
                             <item.icon color={item.color} size={16} />
                         </View>

@@ -9,6 +9,7 @@ import { View, ActivityIndicator, Platform } from 'react-native';
 import { TamaguiProvider } from 'tamagui';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import tamaguiConfig from '../tamagui.config';
+import { AuthProvider } from '../context/AuthContext';
 
 export default function RootLayout() {
     const [user, setUser] = useState(null);
@@ -68,21 +69,23 @@ export default function RootLayout() {
     }
 
     return (
-        <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
-            <ActionSheetProvider>
-                <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-                    <StatusBar style="light" />
-                    <View style={{ flex: 1, width: '100%' }}>
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                contentStyle: { backgroundColor: Theme.colors.background },
-                                animation: 'fade_from_bottom',
-                            }}
-                        />
+        <AuthProvider>
+            <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
+                <ActionSheetProvider>
+                    <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+                        <StatusBar style="light" />
+                        <View style={{ flex: 1, width: '100%' }}>
+                            <Stack
+                                screenOptions={{
+                                    headerShown: false,
+                                    contentStyle: { backgroundColor: Theme.colors.background },
+                                    animation: 'fade_from_bottom',
+                                }}
+                            />
+                        </View>
                     </View>
-                </View>
-            </ActionSheetProvider>
-        </TamaguiProvider>
+                </ActionSheetProvider>
+            </TamaguiProvider>
+        </AuthProvider>
     );
 }
