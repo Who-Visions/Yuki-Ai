@@ -134,13 +134,32 @@ export function ChatSidebar({ isOpen, onClose }) {
             </GestureDetector>
 
             <TamaguiTheme name="dark">
-                <YStack flex={1} padding="$4" space="$4">
+                <YStack flex={1} paddingVertical="$4" paddingLeft={20} paddingRight={10} space="$4">
+
+                    {/* Header */}
+                    {/* Close Button Absolute Overlay */}
+                    <Button
+                        position="absolute"
+                        top={12}
+                        right={12}
+                        zIndex={100}
+                        width={20}
+                        height={20}
+                        padding={0}
+                        circular
+                        icon={<X size={12} color="#000" />}
+                        onPress={onClose}
+                        bg="#FFD700"
+                        color="#000000"
+                        hoverStyle={{ bg: '#FFA000' }}
+                        pressStyle={{ bg: '#FFD700', opacity: 0.8 }}
+                    />
 
                     {/* Header */}
                     <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
                         <XStack alignItems="center" space="$3">
                             <Avatar circular size="$4">
-                                <Avatar.Image source={{ uri: 'https://i.imgur.com/0uca98r.png' }} />
+                                <Avatar.Image source={require('../assets/images/yuki_logo.jpg')} />
                                 <Avatar.Fallback bg="$yellow10" delayMs={600} />
                             </Avatar>
                             <YStack>
@@ -148,14 +167,6 @@ export function ChatSidebar({ isOpen, onClose }) {
                                 <Text color="$gray10" fontSize="$2">AI Stylist</Text>
                             </YStack>
                         </XStack>
-                        <Button
-                            size="$3"
-                            circular
-                            icon={X}
-                            onPress={onClose}
-                            bg="$background025"
-                            hoverStyle={{ bg: '$background05' }}
-                        />
                     </XStack>
 
                     {/* Messages Area */}

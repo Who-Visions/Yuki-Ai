@@ -3,9 +3,10 @@ import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, Dimensions
 import { useRouter } from 'expo-router';
 import { Theme } from '../components/Theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, Search, Sparkles, Flame, Star, AlertCircle, Camera, Bookmark, User, Home as HomeIcon, Compass, ArrowRight, MessageSquare } from 'lucide-react-native';
+import { Bell, Search, Sparkles, Flame, Star, AlertCircle, Camera, Bookmark, User, Home as HomeIcon, Compass, ArrowRight, MessageSquare, Coins } from 'lucide-react-native';
 import { FULL_CHARACTER_POOL } from './data/all_characters';
 import { ChatSidebar } from '../components/ChatSidebar';
+import { NotificationsPopup } from '../components/NotificationsPopup';
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +41,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: Theme.spacing.lg,
+        paddingLeft: 20,
+        paddingRight: 0, // No padding as requested
         marginBottom: 4, // Heavily reduced from 20
         gap: 16,
     },
@@ -321,6 +323,35 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 5,
     },
+    signInButton: {
+        backgroundColor: '#FFD700',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#FFD700',
+    },
+    signInText: {
+        color: '#000000',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    creditsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+        gap: 6,
+    },
+    creditsText: {
+        color: '#FFD700',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
 });
 
 export default function HomeScreen() {
@@ -328,6 +359,7 @@ export default function HomeScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const [featured, setFeatured] = useState([]);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
     // Responsive Constants
     const isDesktop = windowWidth > 768;
@@ -365,7 +397,7 @@ export default function HomeScreen() {
         }
 
         router.push({
-            pathname: '/result',
+            pathname: '/generate',
             params: { imageUri }
         });
     };
@@ -389,19 +421,29 @@ export default function HomeScreen() {
                         <Text style={styles.searchPlaceholder}>Search characters...</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <Bell color="#FFD700" size={24} />
-                        <View style={styles.notificationDot} />
-                    </TouchableOpacity>
+                    {/* Right Actions Group */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        {/* Credits Button */}
+                        <TouchableOpacity style={styles.creditsButton}>
+                            <Coins color="#FFD700" size={14} />
+                            <Text style={styles.creditsText}>2400 Credits</Text>
+                        </TouchableOpacity>
 
-                    {/* Chat Toggle Button */}
-                    <TouchableOpacity
-                        style={[styles.notificationButton, { marginLeft: 10, backgroundColor: isChatOpen ? '#FFD700' : 'rgba(255,255,255,0.05)' }]}
-                        onPress={() => setIsChatOpen(!isChatOpen)}
-                    >
-                        <MessageSquare color={isChatOpen ? '#000' : '#FFD700'} size={24} />
-                    </TouchableOpacity>
+                        {/* Sign In Button */}
+                        <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/')}>
+                            <Text style={styles.signInText}>Sign In</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.notificationButton} onPress={() => setIsNotificationsOpen(!isNotificationsOpen)}>
+                            <Bell color="#FFD700" size={24} />
+                            <View style={styles.notificationDot} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
+                {/* Notifications Popup Overlay */}
+                {isNotificationsOpen && (
+                    <NotificationsPopup onClose={() => setIsNotificationsOpen(false)} />
+                )}
             </View>
 
             {/* Main Content Scroll */}
@@ -426,7 +468,7 @@ export default function HomeScreen() {
                             <Text style={styles.quickUploadTitle}>Quick Upload</Text>
                             <Text style={styles.quickUploadSubtitle}>Drag & Drop your image here</Text>
                         </View>
-                        <TouchableOpacity style={styles.quickUploadButton} onPress={() => router.push('/result')}>
+                        <TouchableOpacity style={styles.quickUploadButton} onPress={() => router.push('/generate')}>
                             <LinearGradient
                                 colors={['#FFD700', '#FFA000']}
                                 start={{ x: 0, y: 0 }}
@@ -504,14 +546,14 @@ export default function HomeScreen() {
                     <View style={styles.fabContainer}>
                         <TouchableOpacity
                             style={styles.fab}
-                            onPress={() => router.push('/result')}
+                            onPress={() => router.push('/generate')}
                         >
                             <Camera color="#000" size={28} />
                         </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.navItem}>
-                        <Bookmark color={Theme.colors.textMuted} size={24} />
-                        <Text style={styles.navLabel}>Saved</Text>
+                    <TouchableOpacity style={styles.navItem} onPress={() => setIsChatOpen(!isChatOpen)}>
+                        <MessageSquare color={isChatOpen ? '#FFD700' : Theme.colors.textMuted} size={24} />
+                        <Text style={[styles.navLabel, isChatOpen && { color: '#FFD700' }]}>Chat</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.navItem} onPress={() => router.push('/settings')}>
                         <User color={Theme.colors.textMuted} size={24} />
