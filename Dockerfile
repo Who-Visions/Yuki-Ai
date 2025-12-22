@@ -21,7 +21,7 @@ COPY . ./
 # Environment variables
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
-ENV WORKERS=4
+ENV WORKERS=2
 
 # Run the application with Gunicorn + UvicornWorker
 CMD exec gunicorn server:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT} --workers ${WORKERS} --timeout 120 --access-logfile - --error-logfile -
