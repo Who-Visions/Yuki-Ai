@@ -341,7 +341,7 @@ async def chat_completions(request: ChatCompletionRequest):
 
     # 2. Configure Generation
     is_yuki = "yuki" in request.model.lower()
-    model_name = "gemini-1.5-flash"
+    model_name = "gemini-3-flash-preview"
     if request.model and "gemini" in request.model and "yuki" not in request.model:
         model_name = request.model
     
