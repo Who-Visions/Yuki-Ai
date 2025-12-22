@@ -4,6 +4,7 @@ import {
     Dimensions, TextInput, useWindowDimensions, LayoutAnimation, Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Theme } from '../components/Theme';
@@ -224,7 +225,12 @@ export default function ResultScreen() {
         if (!prompt.trim() && attachedImages.length === 0) return;
 
         const currentPrompt = prompt.trim() || (attachedImages.length > 0 ? "Render a cinematic cosplay based on this reference photo." : "");
-        if (!currentPrompt) return;
+        if (!currentPrompt || isTyping) return;
+
+        // 🛡️ Filter history: Remove previous errors to prevent history chain-reaction crashes
+        const cleanHistory = messages
+            .filter(m => !m.text.includes("Internal Error") && !m.text.includes("snag in the lab"))
+            .slice(-6);
 
         const userMsg = { id: Date.now(), text: currentPrompt, sender: 'user' };
         setMessages(prev => [...prev, userMsg]);
@@ -232,6 +238,26 @@ export default function ResultScreen() {
         setIsTyping(true);
 
         try {
+            // Helper: Convert local URIs to Base64 for the Chat API
+            const prepareImages = async () => {
+                const parts = [];
+                for (const uri of attachedImages) {
+                    try {
+                        const base64Content = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+                        const mime = uri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+                        parts.push({
+                            type: "image_url",
+                            image_url: { url: `data:${mime};base64,${base64Content}` }
+                        });
+                    } catch (e) {
+                        console.error("Image conversion failed:", e);
+                    }
+                }
+                return parts;
+            };
+
+            const imageParts = await prepareImages();
+
             // Chat with Yuki first
             const chatRes = await fetch('http://localhost:8000/v1/chat/completions', {
                 method: 'POST',
@@ -240,15 +266,12 @@ export default function ResultScreen() {
                     model: "yuki",
                     messages: [
                         { role: "system", content: "You are Yuki, a senior cosplay architect. Be brief, encouraging, and focused. Act like you are initiating the render." },
-                        ...messages.slice(-5).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
+                        ...cleanHistory.map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
                         {
                             role: "user",
                             content: [
                                 { type: "text", text: currentPrompt },
-                                ...attachedImages.map(uri => ({
-                                    type: "image_url",
-                                    image_url: { url: uri } // The server will handle decoding base64/uri
-                                }))
+                                ...imageParts
                             ]
                         }
                     ]

@@ -9,6 +9,10 @@ import subprocess
 import uvicorn
 import logging
 from typing import Optional, Dict, Any, List, Union
+import base64
+from dotenv import load_dotenv
+
+load_dotenv() # Load YUKI_API_KEY from .env
 
 # Import Yuki Agent
 import sqlite3
@@ -83,11 +87,20 @@ except Exception as e:
 # Initialize GenAI Client for /v1/chat/completions
 logger.info("Initializing GenAI Client...")
 try:
-    genai_client = genai.Client(
-        vertexai=True,
-        project=PROJECT_ID,
-        location="global",
-    )
+    api_key = os.getenv("YUKI_API_KEY")
+    client_params = {
+        "project": PROJECT_ID,
+        "location": "global",
+    }
+    
+    if api_key:
+        client_params["api_key"] = api_key
+        logger.info("Found YUKI_API_KEY, using for authentication.")
+    else:
+        client_params["vertexai"] = True
+        logger.info("No API key found, falling back to Vertex AI default auth.")
+
+    genai_client = genai.Client(**client_params)
     logger.info("GenAI Client initialized.")
 except Exception as e:
     logger.error(f"Failed to initialize GenAI Client: {e}")
@@ -266,53 +279,57 @@ async def chat_completions(request: ChatCompletionRequest):
     
     # 1. Convert OpenAI Messages to Gemini Content
     gemini_contents = []
-    
-    first_system_msg = ""
+    system_instructions = ""
     for msg in request.messages:
-        if msg.role == "system" and isinstance(msg.content, str):
-            first_system_msg += msg.content + "\n"
+        if msg.role == "system":
+            system_instructions += str(msg.content or "") + "\n"
 
     for msg in request.messages:
-        role = msg.role
-        if role == "system":
+        if msg.role == "system":
             continue
             
+        role = msg.role
         content = msg.content
         parts = []
-        if content:
-            if isinstance(content, str) and content.strip():
-                # Prepend system msg for the very first user message to preserve context
-                text_to_add = (first_system_msg + content) if not gemini_contents and role == "user" else content
-                parts.append(types.Part(text=text_to_add))
-            elif isinstance(content, list):
-                for item in content:
-                    if item.get("type") == "text" and item.get("text", "").strip():
-                        text_to_add = (first_system_msg + item["text"]) if not gemini_contents and role == "user" else item["text"]
-                        parts.append(types.Part(text=text_to_add))
-                    elif item.get("type") == "image_url":
-                        url = item["image_url"]["url"]
-                        if url.startswith("data:image"):
-                            try:
-                                _, encoded = url.split(",", 1)
-                                image_bytes = base64.b64decode(encoded)
-                                mime = "image/png" if "png" in url else ("image/webp" if "webp" in url else "image/jpeg")
-                                parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
-                                logger.info(f"Merged image part ({mime})")
-                            except Exception as e:
-                                logger.error(f"Image decode fail: {e}")
-                                parts.append(types.Part(text="[Image Error]"))
-                        else:
-                            parts.append(types.Part(text=f"[Image URL: {url}]"))
 
-        if parts:
-            gemini_role = "user" if role == "user" else "model"
-            # 🛡️ ROLE MERGING: Gemini requires strictly alternating User/Model turns.
-            # If the current role matches the previous turn, we merge parts into one turn.
-            if gemini_contents and gemini_contents[-1].role == gemini_role:
-                gemini_contents[-1].parts.extend(parts)
-                logger.debug(f"Merged consecutive {gemini_role} messages")
-            else:
-                gemini_contents.append(types.Content(role=gemini_role, parts=parts))
+        if isinstance(content, str) and content.strip():
+            parts.append(types.Part(text=content))
+        elif isinstance(content, list):
+            for item in content:
+                if item.get("type") == "text" and item.get("text", "").strip():
+                    parts.append(types.Part(text=item["text"]))
+                elif item.get("type") == "image_url":
+                    url = item["image_url"]["url"]
+                    if url.startswith("data:image"):
+                        try:
+                            _, encoded = url.split(",", 1)
+                            image_bytes = base64.b64decode(encoded)
+                            mime = "image/png" if "png" in url else ("image/webp" if "webp" in url else "image/jpeg")
+                            parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
+                        except Exception as e:
+                            logger.error(f"Image decode error: {e}")
+                    else:
+                        parts.append(types.Part(text=f"[Image: {url}]"))
+
+        if not parts:
+            continue
+
+        gemini_role = "user" if role == "user" else "model"
+        
+        # 🛡️ Gemini Enforcement: FIRST message must be USER. 
+        if not gemini_contents and gemini_role == "model":
+            logger.warning("Skipping leading model message to ensure User-first start.")
+            continue
+
+        # 🛡️ Gemini Enforcement: ALTERNATE roles.
+        if gemini_contents and gemini_contents[-1].role == gemini_role:
+            gemini_contents[-1].parts.extend(parts)
+            logger.debug(f"Merged consecutive {gemini_role} message.")
+        else:
+            gemini_contents.append(types.Content(role=gemini_role, parts=parts))
+
+    # Log Payload for Debugging
+    logger.info(f"Final Gemini Payload: {len(gemini_contents)} turns. Role Sequence: {[c.role for c in gemini_contents]}")
 
     # 2. Configure Generation
     model_name = "gemini-3-flash-preview"

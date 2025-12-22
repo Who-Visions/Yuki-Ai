@@ -1,0 +1,9 @@
+{
+    "model": "yuki",
+    "messages": [
+        {
+            "role": "user",
+            "content": "turn me into spider gwen"
+        }
+    ]
+}
