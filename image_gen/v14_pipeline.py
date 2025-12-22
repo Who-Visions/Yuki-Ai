@@ -240,26 +240,21 @@ async def expand_to_68_points(
     3. Round ALL coordinates to 2 decimal places to be concise.
     """
     
-    try:
-        response = await client.aio.models.generate_content(
-            model=FLASH_MODEL,
-            contents=[prompt] + image_parts,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=LandmarkExpansionResponse,
-                temperature=0.1,
-                thinking_config=types.ThinkingConfig(thinking_level="low")
-            )
+    response = await client.aio.models.generate_content(
+        model=FLASH_MODEL,
+        contents=[prompt] + image_parts,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=LandmarkExpansionResponse,
+            temperature=0.1,
+            thinking_config=types.ThinkingConfig(thinking_level="low")
         )
-        
-        # Pydantic validation handles parsing
-        result = LandmarkExpansionResponse.model_validate_json(response.text)
-        print(f"   ✅ Expanded to 68 points (confidence: {result.mapping_confidence.overall})")
-        return result.model_dump()
-        
-    except Exception as e:
-        print(f"   ❌ Stage 2 Failed: {e}")
-        return {}
+    )
+    
+    # Pydantic validation handles parsing
+    result = LandmarkExpansionResponse.model_validate_json(response.text)
+    print(f"   ✅ Expanded to 68 points (confidence: {result.mapping_confidence.overall})")
+    return result.model_dump()
 
 # =============================================================================
 # STAGE 3: GEMINI 3 PRO (Structured Output)
@@ -549,9 +544,13 @@ class V12Pipeline:
                 return None
             
             # Stage 2
-            expansion_data = await expand_to_68_points(self.client, cv_data, subject_parts)
-            if not expansion_data:
-                self.last_error = "Stage 2: 68-point expansion failed."
+            try:
+                expansion_data = await expand_to_68_points(self.client, cv_data, subject_parts)
+                if not expansion_data:
+                    self.last_error = "Stage 2: 68-point expansion returned empty."
+                    return None
+            except Exception as e:
+                self.last_error = f"Stage 2 Error: {e}"
                 return None
             
             # Stage 3
