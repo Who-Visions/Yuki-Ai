@@ -86,17 +86,20 @@ app.add_middleware(
 )
 
 # Configuration (IS_CLOUD defined at top of file)
+GCS_BUCKET = "yuki-ai-assets"  # For reference images and cache
 
 if IS_CLOUD:
     INPUT_DIR = "/tmp/inputs"
     OUTPUT_DIR = "/tmp/outputs"
-    SCRIPT_PATH = None  # Not used in Cloud Run
-    REF_DIR = "/tmp/subjects"
+    SCRIPT_PATH = "/app/image_gen/v12_pipeline.py"  # Bundled in Docker image
+    REF_DIR = "/tmp/subjects"  # Downloaded from GCS on demand
+    CACHE_DIR = "/tmp/cache/cloud_vision"
 else:
     INPUT_DIR = r"C:\Yuki_Local\Inputs"
     OUTPUT_DIR = r"C:\Yuki_Local\Cosplay_Lab\Renders\Server_Output"
     SCRIPT_PATH = r"C:\Yuki_Local\image_gen\v14_pipeline.py"
     REF_DIR = r"C:\Yuki_Local\Cosplay_Lab\Subjects"
+    CACHE_DIR = r"C:\Yuki_Local\cache\cloud_vision"
 
 PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "us-central1"
@@ -106,6 +109,8 @@ RE_ID = "projects/914641083224/locations/us-central1/reasoningEngines/8949824538
 try:
     os.makedirs(INPUT_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(REF_DIR, exist_ok=True)
+    os.makedirs(CACHE_DIR, exist_ok=True)
 except Exception as e:
     logger.warning(f"Could not create directories: {e}")
 
@@ -221,6 +226,40 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     metadata: Optional[Dict[str, Any]] = None
+
+# GCS Helper for downloading reference images
+def download_reference_from_gcs(character_name: str) -> Optional[str]:
+    """Download a character reference image from GCS to local /tmp."""
+    try:
+        from google.cloud import storage
+        client = storage.Client()
+        bucket = client.bucket(GCS_BUCKET)
+        
+        # Try to find matching reference
+        prefix = "subjects/"
+        blobs = list(bucket.list_blobs(prefix=prefix))
+        
+        for blob in blobs:
+            if character_name.lower().replace(" ", "_") in blob.name.lower():
+                local_path = os.path.join(REF_DIR, os.path.basename(blob.name))
+                if not os.path.exists(local_path):
+                    blob.download_to_filename(local_path)
+                    logger.info(f"Downloaded reference: {blob.name} -> {local_path}")
+                return local_path
+        
+        # Default fallback
+        default_ref = "subjects/top15_10_Ichigo_Kurosaki_4k.png"
+        local_path = os.path.join(REF_DIR, "top15_10_Ichigo_Kurosaki_4k.png")
+        if not os.path.exists(local_path):
+            blob = bucket.blob(default_ref)
+            if blob.exists():
+                blob.download_to_filename(local_path)
+                logger.info(f"Downloaded default reference: {default_ref}")
+        return local_path if os.path.exists(local_path) else None
+        
+    except Exception as e:
+        logger.error(f"GCS download failed: {e}")
+        return None
 
 async def run_generation_script(input_path: str, prompt: str, request_id: str):
     """
@@ -513,25 +552,94 @@ async def chat_completions(request: ChatCompletionRequest):
 
 @app.post("/generate")
 async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile = File(...), prompt: str = "Ichigo Kurosaki"):
+    """
+    Generate cosplay image using Gemini Pro Image.
+    Cloud Run: Uses Gemini API directly
+    Local: Uses v12/v14 pipeline
+    """
     try:
-        # Safe filename
-        filename = f"u_{int(time.time())}_{file.filename}"
-        subject_dir = os.path.join(INPUT_DIR, f"sub_{int(time.time())}")
-        os.makedirs(subject_dir, exist_ok=True)
-        
-        file_location = os.path.join(subject_dir, filename)
-        
-        # Save uploaded file
+        # Read the uploaded file
         content = await file.read()
-        with open(file_location, "wb") as f:
-            f.write(content)
+        logger.info(f"Received file: {file.filename}, size: {len(content)} bytes")
+        
+        if IS_CLOUD:
+            # Cloud Run: Use Gemini Pro Image directly
+            if not genai_client:
+                return {"status": "error", "message": "GenAI client not initialized"}
             
-        logger.info(f"File saved to {file_location}")
+            from google.genai import types
+            import base64
+            
+            # Prepare the image part
+            mime_type = file.content_type or "image/jpeg"
+            image_part = types.Part.from_bytes(data=content, mime_type=mime_type)
+            
+            # Build generation prompt
+            generation_prompt = f"""COSPLAY TRANSFORMATION
+
+Subject: The person in the uploaded photo
+Character: {prompt}
+
+TASK: Generate a high-quality cosplay render of the subject as the specified character.
+
+REQUIREMENTS:
+- PRESERVE the subject's exact facial features, skin tone, and unique characteristics
+- Dress them in the iconic costume of the character
+- Use cinematic lighting and professional photography style
+- 8K quality, photorealistic rendering
+- Full body or portrait shot as appropriate
+
+Generate a stunning cosplay transformation image."""
+            
+            try:
+                response = await genai_client.aio.models.generate_content(
+                    model="gemini-3-pro-image-preview",
+                    contents=[
+                        "=== SUBJECT PHOTO ===",
+                        image_part,
+                        generation_prompt
+                    ],
+                    config=types.GenerateContentConfig(
+                        response_modalities=['IMAGE', 'TEXT'],
+                        temperature=1.0
+                    )
+                )
+                
+                # Extract generated image
+                if response.candidates and response.candidates[0].content:
+                    for part in response.candidates[0].content.parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            image_data = part.inline_data.data
+                            image_b64 = base64.b64encode(image_data).decode('utf-8')
+                            return {
+                                "status": "success",
+                                "message": "Render complete!",
+                                "image": f"data:image/png;base64,{image_b64}",
+                                "prompt": prompt
+                            }
+                
+                return {"status": "error", "message": "No image generated. The model may have blocked the request."}
+                
+            except Exception as gen_e:
+                logger.error(f"Generation failed: {gen_e}")
+                return {"status": "error", "message": f"Generation failed: {str(gen_e)}"}
         
-        # Trigger Generation in Background
-        background_tasks.add_task(run_generation_script, file_location, prompt, filename)
-        
-        return {"status": "processing", "message": "Image uploaded. V12 Pipeline triggered.", "id": filename}
+        else:
+            # Local: Use v12/v14 pipeline
+            filename = f"u_{int(time.time())}_{file.filename}"
+            subject_dir = os.path.join(INPUT_DIR, f"sub_{int(time.time())}")
+            os.makedirs(subject_dir, exist_ok=True)
+            
+            file_location = os.path.join(subject_dir, filename)
+            with open(file_location, "wb") as f:
+                f.write(content)
+                
+            logger.info(f"File saved to {file_location}")
+            
+            # Trigger Generation in Background
+            background_tasks.add_task(run_generation_script, file_location, prompt, filename)
+            
+            return {"status": "processing", "message": "Image uploaded. V12 Pipeline triggered.", "id": filename}
         
     except Exception as e:
         logger.error(f"Upload failed: {e}")

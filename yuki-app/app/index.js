@@ -9,6 +9,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { auth } from '../src/lib/firebase';
 import { GoogleAuthProvider, signInWithCredential } from '@firebase/auth';
+import { useAuth } from '../context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -27,6 +28,7 @@ const COLORS = {
 
 export default function LandingScreen() {
     const router = useRouter();
+    const { signIn } = useAuth();
 
     const [request, response, promptAsync] = Google.useAuthRequest({
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -42,7 +44,9 @@ export default function LandingScreen() {
                 const { signInWithPopup } = await import('@firebase/auth');
                 const provider = new GoogleAuthProvider();
                 const result = await signInWithPopup(auth, provider);
-                console.log('🦊 Google Sign-In Success:', result.user.uid);
+                const email = result.user.email;
+                console.log('🦊 Google Sign-In Success:', email);
+                await signIn(email);  // Persist to AuthContext
                 router.replace('/home');
             } catch (err) {
                 console.error('🦊 Google Sign-in error:', err.code, err.message);
@@ -64,8 +68,10 @@ export default function LandingScreen() {
             const { id_token } = response.params;
             const credential = GoogleAuthProvider.credential(id_token);
             signInWithCredential(auth, credential)
-                .then(() => {
-                    console.log('🦊 Google Sign-In Success!');
+                .then(async (result) => {
+                    const email = result.user.email;
+                    console.log('🦊 Google Sign-In Success:', email);
+                    await signIn(email);  // Persist to AuthContext
                     router.replace('/home');
                 })
                 .catch(err => console.error('🦊 Sign-in error:', err));

@@ -498,7 +498,7 @@ export default function HomeScreen() {
 
     const handleProfilePress = () => {
         if (!user) {
-            router.push('/login');
+            router.push('/');  // index.js has Firebase sign-in
         } else {
             setIsProfileOpen(!isProfileOpen);
         }

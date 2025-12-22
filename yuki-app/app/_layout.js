@@ -9,7 +9,7 @@ import { View, ActivityIndicator, Platform } from 'react-native';
 import { TamaguiProvider } from 'tamagui';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import tamaguiConfig from '../tamagui.config';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 export default function RootLayout() {
     const [user, setUser] = useState(null);

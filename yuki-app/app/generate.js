@@ -8,11 +8,12 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Theme } from '../components/Theme';
+import { useAuth } from '../context/AuthContext';
 import {
     Image as ImageIcon, Video, Pencil, LayoutGrid, Film, ChevronRight,
     Zap, Settings, Copy, Download, Plus, Eraser, Type, MousePointer2,
     Sun, Moon, MoreVertical, Sparkles, Scale, Maximize2, Palette, Image as ImgIcon, Smartphone,
-    Monitor, Ghost, X
+    Monitor, Ghost, X, User
 } from 'lucide-react-native';
 
 
@@ -21,6 +22,7 @@ export default function ResultScreen() {
     const params = useLocalSearchParams();
     const { width } = useWindowDimensions();
     const isDesktop = width > 1024;
+    const { user } = useAuth();
 
     // State
     const [prompt, setPrompt] = useState(params.prompt || 'Highly detailed 3D renders of futuristic robotic animals with glowing neon parts and cyberpunk aesthetics. Sci-fi concept art style, hard surface metallic textures, cinematic lighting, dark gradient background.');
@@ -95,10 +97,17 @@ export default function ResultScreen() {
                 <MenuItem icon={Settings} label="Product Admin" />
             </View>
             <View style={styles.sidebarBottom}>
-                <TouchableOpacity style={styles.upgradeCard}>
-                    <Zap size={20} color="#FFD700" fill="#FFD700" />
-                    <Text style={styles.upgradeText}>Upgrade to Pro</Text>
-                </TouchableOpacity>
+                {user ? (
+                    <TouchableOpacity style={styles.upgradeCard} onPress={() => router.push('/settings')}>
+                        <User size={20} color="#FFD700" />
+                        <Text style={styles.upgradeText}>{user.name || user.email?.split('@')[0]}</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={styles.upgradeCard} onPress={() => router.push('/')}>
+                        <Zap size={20} color="#FFD700" fill="#FFD700" />
+                        <Text style={styles.upgradeText}>Sign In</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
@@ -186,32 +195,51 @@ export default function ResultScreen() {
 
     const runGeneration = async (genPrompt) => {
         setIsGenerating(true);
+        setMessages(prev => [...prev, { id: Date.now(), text: "🎨 Rendering your transformation...", sender: 'yuki' }]);
+
         try {
             const formData = new FormData();
             const uri = attachedImages[0];
-            const name = uri.split('/').pop();
+            const name = uri.split('/').pop() || 'image.jpg';
             const type = 'image/jpeg';
 
-            formData.append('file', { uri, name, type });
+            // For web, we need to fetch the blob first
+            if (Platform.OS === 'web') {
+                const response = await fetch(uri);
+                const blob = await response.blob();
+                formData.append('file', blob, name);
+            } else {
+                formData.append('file', { uri, name, type });
+            }
             formData.append('prompt', genPrompt);
 
             const response = await fetch('https://yuki-ai-4gig-914641083224.us-central1.run.app/generate', {
                 method: 'POST',
                 body: formData,
-                headers: { 'Accept': 'application/json' },
             });
 
             const data = await response.json();
-            if (data.status === 'processing') {
-                setResultImage('https://i.imgur.com/0uca98r.png');
+            console.log("🎨 Generate Response:", data);
+
+            if (data.status === 'success' && data.image) {
+                // Show generated image in chat
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: "✨ Your render is complete!",
+                    sender: 'yuki',
+                    images: [data.image]
+                }]);
+                setResultImage(data.image);
                 setResultDetails({
                     title: genPrompt.split(' ').slice(0, 3).join(' '),
                     caption: genPrompt,
                     seed: Math.floor(Math.random() * 1000000),
-                    model: 'V12 Pipeline'
+                    model: 'Gemini 3 Pro Image'
                 });
+            } else if (data.status === 'processing') {
+                setMessages(prev => [...prev, { id: Date.now(), text: "⏳ Generation queued. Check back soon!", sender: 'yuki' }]);
             } else {
-                setMessages(prev => [...prev, { id: Date.now(), text: "⚠️ I hit a snag in the lab: " + (data.message || "The engine didn't provide a reason."), sender: 'yuki' }]);
+                setMessages(prev => [...prev, { id: Date.now(), text: "⚠️ " + (data.message || "Generation failed. Try a different prompt?"), sender: 'yuki' }]);
             }
         } catch (error) {
             console.error('Generation Error:', error);
@@ -312,6 +340,7 @@ export default function ResultScreen() {
 
             if (chatRes.ok) {
                 const chatData = await chatRes.json();
+                console.log("📨 Chat API Response:", chatData);
                 const rawContent = chatData.choices?.[0]?.message?.content || "";
 
                 let yukiText = "Let's get this render started!";
@@ -334,9 +363,22 @@ export default function ResultScreen() {
                 if (yukiAction === 'generate' && attachedImages.length > 0) {
                     await runGeneration(refinedPrompt);
                 }
+            } else {
+                const errorText = await chatRes.text();
+                console.error("❌ Chat API Error:", chatRes.status, errorText);
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    text: `⚠️ Yuki couldn't respond (${chatRes.status}). Try again?`,
+                    sender: 'yuki'
+                }]);
             }
         } catch (e) {
             console.error("Chat error:", e);
+            setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                text: "⚠️ Connection issue. Is the server awake?",
+                sender: 'yuki'
+            }]);
         } finally {
             setIsTyping(false);
         }
@@ -401,7 +443,17 @@ export default function ResultScreen() {
                                     <View style={styles.yukiRow}>
                                         <View style={[styles.bubble, styles.yukiBubble, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
                                             <View style={styles.spinnerContainer}>
-                                                <View style={styles.spinner} />
+                                                <View
+                                                    style={[
+                                                        styles.spinner,
+                                                        Platform.OS === 'web' && {
+                                                            animationName: 'spin',
+                                                            animationDuration: '1s',
+                                                            animationTimingFunction: 'linear',
+                                                            animationIterationCount: 'infinite'
+                                                        }
+                                                    ]}
+                                                />
                                             </View>
                                             <Text style={styles.yukiText}>Yuki is crafting your vision...</Text>
                                         </View>
