@@ -10,3 +10,8 @@ python-multipart>=0.0.9
 requests>=2.31.0
 Pillow>=10.0.0
 numpy>=1.26.0
+python-dotenv
+langchain-core
+langchain
+langchain-google-vertexai
+langgraph

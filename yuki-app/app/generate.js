@@ -280,8 +280,28 @@ export default function ResultScreen() {
 
             if (chatRes.ok) {
                 const chatData = await chatRes.json();
-                const aiText = chatData.choices?.[0]?.message?.content || "Let's get this render started!";
-                setMessages(prev => [...prev, { id: Date.now() + 1, text: aiText, sender: 'yuki' }]);
+                const rawContent = chatData.choices?.[0]?.message?.content || "";
+
+                let yukiText = "Let's get this render started!";
+                let yukiAction = "chat";
+                let refinedPrompt = currentPrompt;
+
+                try {
+                    const yukiJson = JSON.parse(rawContent);
+                    yukiText = yukiJson.message;
+                    yukiAction = yukiJson.action;
+                    refinedPrompt = yukiJson.refined_prompt || currentPrompt;
+                    console.log("🦊 Yuki Logic:", yukiJson.thought);
+                } catch (e) {
+                    yukiText = rawContent || yukiText;
+                }
+
+                setMessages(prev => [...prev, { id: Date.now() + 1, text: yukiText, sender: 'yuki' }]);
+
+                // 🚀 Agentic Trigger: Let Yuki decide when to start the render
+                if (yukiAction === 'generate' && attachedImages.length > 0) {
+                    await runGeneration(refinedPrompt);
+                }
             }
         } catch (e) {
             console.error("Chat error:", e);
@@ -289,10 +309,13 @@ export default function ResultScreen() {
             setIsTyping(false);
         }
 
-        if (attachedImages.length > 0) {
-            await runGeneration(currentPrompt);
-        } else if (currentPrompt.length > 5) {
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: "I'm ready! Just attach your base photo so I can lock your identity before starting the render. ✨", sender: 'yuki' }]);
+        // Logic Fallback for non-structured or manual triggers
+        if (attachedImages.length > 0 && !isTyping) {
+            // If images are attached but Yuki didn't explicitly trigger 'generate', 
+            // we still allow manual generation if prompted, or we can wait.
+            // For now, let's trust Yuki's structured decision.
+        } else if (currentPrompt.length > 5 && attachedImages.length === 0) {
+            // Handled by Yuki's 'ask_for_photo' action above usually
         }
     };
 
