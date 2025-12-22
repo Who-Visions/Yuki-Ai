@@ -1,31 +1,81 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, TextInput, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    StyleSheet, View, Text, Image, TouchableOpacity, ScrollView,
+    Dimensions, TextInput, useWindowDimensions, LayoutAnimation, Platform
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Theme } from '../components/Theme';
 import {
     Image as ImageIcon, Video, Pencil, LayoutGrid, Film, ChevronRight,
     Zap, Settings, Copy, Download, Plus, Eraser, Type, MousePointer2,
     Sun, Moon, MoreVertical, Sparkles, Scale, Maximize2, Palette, Image as ImgIcon, Smartphone,
-    Monitor, Ghost
+    Monitor, Ghost, X
 } from 'lucide-react-native';
 
-const GENERATED_IMAGES = [
-    { id: '1', uri: 'https://i.imgur.com/0uca98r.png', version: 'V3' },
-    { id: '2', uri: 'https://i.imgur.com/0uca98r.png', version: 'V2' },
-    { id: '3', uri: 'https://i.imgur.com/0uca98r.png', version: 'V1' },
-];
 
 export default function ResultScreen() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const { width } = useWindowDimensions();
     const isDesktop = width > 1024;
 
     // State
-    const [prompt, setPrompt] = useState('Highly detailed 3D renders of futuristic robotic animals with glowing neon parts and cyberpunk aesthetics. Sci-fi concept art style, hard surface metallic textures, cinematic lighting, dark gradient background.');
+    const [prompt, setPrompt] = useState(params.prompt || 'Highly detailed 3D renders of futuristic robotic animals with glowing neon parts and cyberpunk aesthetics. Sci-fi concept art style, hard surface metallic textures, cinematic lighting, dark gradient background.');
     const [negativePrompt, setNegativePrompt] = useState('blurry, low quality, distorted, extra limbs');
-    const [aspectRatio, setAspectRatio] = useState('1:1');
+    const [aspectRatio, setAspectRatio] = useState('9:16');
     const [imageType, setImageType] = useState('3D');
-    const [numImages, setNumImages] = useState(4);
+    const [numImages, setNumImages] = useState(1);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [resultImage, setResultImage] = useState(null);
+    const [resultDetails, setResultDetails] = useState(null);
+    const [messages, setMessages] = useState([
+        { id: 1, text: "Hey! I'm Yuki. Ready to create something legendary? ✨", sender: 'yuki' }
+    ]);
+    const [isTyping, setIsTyping] = useState(false);
+
+    // Refs
+    const workspaceScrollRef = useRef(null);
+
+    // Auto-scroll chat
+    useEffect(() => {
+        if (messages.length > 1) {
+            workspaceScrollRef.current?.scrollToEnd({ animated: true });
+        }
+    }, [messages, isTyping]);
+
+    // Support initial load from multiple sources
+    const getInitialImages = (p) => {
+        const incomingImage = p.initialImage || p.imageUri;
+        return p.initialImages ? JSON.parse(p.initialImages) : (incomingImage ? [incomingImage] : []);
+    };
+    const [attachedImages, setAttachedImages] = useState(getInitialImages(params));
+
+    // Sync state if params change (e.g., navigating from Home again)
+    useEffect(() => {
+        if (params.prompt) setPrompt(params.prompt);
+        setAttachedImages(getInitialImages(params));
+    }, [params.prompt, params.initialImage, params.imageUri, params.initialImages]);
+
+    const pickImage = async () => {
+        if (attachedImages.length >= 5) {
+            alert("Limit Reached: You can only attach up to 5 images.");
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            selectionLimit: 5 - attachedImages.length,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const newUris = result.assets.map(asset => asset.uri);
+            setAttachedImages(prev => [...prev, ...newUris].slice(0, 5));
+        }
+    };
 
     // Left Sidebar
     const Sidebar = () => (
@@ -62,11 +112,31 @@ export default function ResultScreen() {
     // Right Control Panel - Narrower
     const ControlPanel = () => (
         <ScrollView style={styles.controlPanel} showsVerticalScrollIndicator={false}>
+            {/* Referenced Images */}
+            {attachedImages.length > 0 && (
+                <View style={styles.controlSection}>
+                    <Text style={styles.sectionTitle}>Reference Images ({attachedImages.length}/5)</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+                        {attachedImages.map((uri, idx) => (
+                            <View key={idx} style={{ position: 'relative' }}>
+                                <Image source={{ uri }} style={{ width: 60, height: 60, borderRadius: 8, borderWidth: 1, borderColor: '#333' }} />
+                                <TouchableOpacity
+                                    onPress={() => setAttachedImages(prev => prev.filter((_, i) => i !== idx))}
+                                    style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#FF6B6B', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
+                                >
+                                    <X color="#FFF" size={10} />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
+
             {/* Aspect Ratio */}
             <View style={styles.controlSection}>
                 <Text style={styles.sectionTitle}>Image Ratio</Text>
                 <View style={styles.ratioGrid}>
-                    {['4:5', '2:3', '1:1', '16:9'].map(ratio => (
+                    {['9:16', '2:3', '1:1', '16:9'].map(ratio => (
                         <TouchableOpacity
                             key={ratio}
                             style={[styles.ratioOption, aspectRatio === ratio && styles.ratioOptionActive]}
@@ -75,35 +145,6 @@ export default function ResultScreen() {
                             <Text style={[styles.ratioText, aspectRatio === ratio && styles.ratioTextActive]}>{ratio}</Text>
                         </TouchableOpacity>
                     ))}
-                </View>
-            </View>
-
-            {/* Prompt Inputs */}
-            <View style={styles.controlSection}>
-                <Text style={styles.sectionTitle}>Describe your image</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.textInput}
-                        multiline
-                        placeholder="Enter your prompt..."
-                        placeholderTextColor="#444"
-                        value={prompt}
-                        onChangeText={setPrompt}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.controlSection}>
-                <Text style={styles.sectionTitle}>Negative Prompt</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.textInput}
-                        multiline
-                        placeholder="What you don't want..."
-                        placeholderTextColor="#444"
-                        value={negativePrompt}
-                        onChangeText={setNegativePrompt}
-                    />
                 </View>
             </View>
 
@@ -139,13 +180,98 @@ export default function ResultScreen() {
                     ))}
                 </View>
             </View>
-
-            <TouchableOpacity style={styles.generateButton}>
-                <Zap size={18} color="#000" fill="#000" style={{ marginRight: 8 }} />
-                <Text style={styles.generateButtonText}>Generate Image</Text>
-            </TouchableOpacity>
         </ScrollView>
     );
+
+    const runGeneration = async (genPrompt) => {
+        setIsGenerating(true);
+        try {
+            const formData = new FormData();
+            const uri = attachedImages[0];
+            const name = uri.split('/').pop();
+            const type = 'image/jpeg';
+
+            formData.append('file', { uri, name, type });
+            formData.append('prompt', genPrompt);
+
+            const response = await fetch('http://localhost:8000/generate', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' },
+            });
+
+            const data = await response.json();
+            if (data.status === 'processing') {
+                setResultImage('https://i.imgur.com/0uca98r.png');
+                setResultDetails({
+                    title: genPrompt.split(' ').slice(0, 3).join(' '),
+                    caption: genPrompt,
+                    seed: Math.floor(Math.random() * 1000000),
+                    model: 'V12 Pipeline'
+                });
+            } else {
+                setMessages(prev => [...prev, { id: Date.now(), text: "⚠️ I hit a snag in the lab: " + (data.message || "The engine didn't provide a reason."), sender: 'yuki' }]);
+            }
+        } catch (error) {
+            console.error('Generation Error:', error);
+            setMessages(prev => [...prev, { id: Date.now(), text: "⚠️ Connection lost to the lab. Is the server awake?", sender: 'yuki' }]);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleInteraction = async () => {
+        if (!prompt.trim() && attachedImages.length === 0) return;
+
+        const currentPrompt = prompt.trim() || (attachedImages.length > 0 ? "Render a cinematic cosplay based on this reference photo." : "");
+        if (!currentPrompt) return;
+
+        const userMsg = { id: Date.now(), text: currentPrompt, sender: 'user' };
+        setMessages(prev => [...prev, userMsg]);
+        setPrompt("");
+        setIsTyping(true);
+
+        try {
+            // Chat with Yuki first
+            const chatRes = await fetch('http://localhost:8000/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: "yuki",
+                    messages: [
+                        { role: "system", content: "You are Yuki, a senior cosplay architect. Be brief, encouraging, and focused. Act like you are initiating the render." },
+                        ...messages.slice(-5).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
+                        {
+                            role: "user",
+                            content: [
+                                { type: "text", text: currentPrompt },
+                                ...attachedImages.map(uri => ({
+                                    type: "image_url",
+                                    image_url: { url: uri } // The server will handle decoding base64/uri
+                                }))
+                            ]
+                        }
+                    ]
+                }),
+            });
+
+            if (chatRes.ok) {
+                const chatData = await chatRes.json();
+                const aiText = chatData.choices?.[0]?.message?.content || "Let's get this render started!";
+                setMessages(prev => [...prev, { id: Date.now() + 1, text: aiText, sender: 'yuki' }]);
+            }
+        } catch (e) {
+            console.error("Chat error:", e);
+        } finally {
+            setIsTyping(false);
+        }
+
+        if (attachedImages.length > 0) {
+            await runGeneration(currentPrompt);
+        } else if (currentPrompt.length > 5) {
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: "I'm ready! Just attach your base photo so I can lock your identity before starting the render. ✨", sender: 'yuki' }]);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -163,57 +289,101 @@ export default function ResultScreen() {
                             </View>
                         </View>
 
-                        {/* Result Highlight Card */}
-                        <View style={styles.highlightCard}>
-                            <View style={styles.highlightImageArea}>
-                                <Image source={{ uri: 'https://i.imgur.com/0uca98r.png' }} style={styles.highlightImage} resizeMode="cover" />
+                        {/* Scrollable Content Area */}
+                        <ScrollView
+                            ref={workspaceScrollRef}
+                            style={styles.workspaceScroll}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.workspaceContent}
+                        >
+                            {/* Yuki Chat History Overlay */}
+                            <View style={styles.chatFlowContainer}>
+                                {messages.map((msg) => (
+                                    <View key={msg.id} style={[
+                                        styles.messageRow,
+                                        msg.sender === 'user' ? styles.userRow : styles.yukiRow
+                                    ]}>
+                                        <View style={[
+                                            styles.bubble,
+                                            msg.sender === 'user' ? styles.userBubble : styles.yukiBubble
+                                        ]}>
+                                            <Text style={msg.sender === 'user' ? styles.userText : styles.yukiText}>{msg.text}</Text>
+                                        </View>
+                                    </View>
+                                ))}
+                                {isTyping && (
+                                    <View style={styles.yukiRow}>
+                                        <View style={[styles.bubble, styles.yukiBubble]}>
+                                            <Text style={styles.yukiText}>Yuki is drafting your render... ✨</Text>
+                                        </View>
+                                    </View>
+                                )}
                             </View>
-                            <View style={styles.highlightDetails}>
-                                <Text style={styles.detailTitle}>Black Panther Chibi</Text>
-                                <Text style={styles.detailCaption} numberOfLines={3}>
-                                    This is a description of an adorable black panther cub wearing an attention-grabbing purple hoodie.
-                                </Text>
 
-                                <View style={styles.detailGrid}>
-                                    <View>
-                                        <Text style={styles.detailLabel}>Seed</Text>
-                                        <Text style={styles.detailValue}>762122</Text>
+                        </ScrollView>
+
+                        {/* PERSISTENT PROMPT BAR (Mimic from home.js) */}
+                        <View style={styles.footerPromptArea}>
+                            <View style={styles.quickUploadContainer}>
+                                <LinearGradient
+                                    colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <View style={styles.quickUploadContent}>
+                                    <View style={{ flex: 1, justifyContent: 'center', minHeight: 40, paddingRight: 10 }}>
+                                        {attachedImages.length > 0 && (
+                                            <View style={{ marginBottom: 12 }}>
+                                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
+                                                    {attachedImages.map((uri, idx) => (
+                                                        <View key={idx} style={{ position: 'relative' }}>
+                                                            <Image source={{ uri }} style={{ width: 40, height: 40, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }} />
+                                                            <TouchableOpacity
+                                                                onPress={() => setAttachedImages(prev => prev.filter((_, i) => i !== idx))}
+                                                                style={{ position: 'absolute', top: -6, right: -6, backgroundColor: '#FF6B6B', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' }}
+                                                            >
+                                                                <X color="#FFF" size={12} />
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    ))}
+                                                </ScrollView>
+                                            </View>
+                                        )}
+                                        <TextInput
+                                            style={{ color: '#FFF', fontSize: 16, minHeight: 40, maxHeight: 120, textAlignVertical: 'center' }}
+                                            placeholder="Add instructions or change character..."
+                                            placeholderTextColor="rgba(255,255,255,0.5)"
+                                            value={prompt}
+                                            onChangeText={setPrompt}
+                                            multiline={true}
+                                            onContentSizeChange={() => {
+                                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                            }}
+                                        />
                                     </View>
-                                    <View>
-                                        <Text style={styles.detailLabel}>Scale</Text>
-                                        <Text style={styles.detailValue}>8.0</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.detailLabel}>Sampler</Text>
-                                        <Text style={styles.detailValue}>PMLS</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.detailLabel}>Model</Text>
-                                        <Text style={styles.detailValue}>SD 2.5</Text>
+
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                        <TouchableOpacity style={styles.uploadIconBtn} onPress={pickImage}>
+                                            <ImgIcon color={attachedImages.length > 0 ? "#4CAF50" : "#FFD700"} size={20} />
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.quickUploadButton, (isGenerating || isTyping) && styles.generateButtonDisabled]}
+                                            onPress={handleInteraction}
+                                            disabled={isGenerating || isTyping}
+                                        >
+                                            <LinearGradient
+                                                colors={['#FFD700', '#FFA000']}
+                                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                                                style={StyleSheet.absoluteFill}
+                                            />
+                                            <Text style={styles.quickUploadButtonText}>{isGenerating || isTyping ? "..." : "Generate"}</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
-
-                                <View style={styles.detailActions}>
-                                    <TouchableOpacity style={styles.primaryAction}>
-                                        <Download size={18} color="#000" />
-                                        <Text style={styles.primaryActionText}>Download</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.secondaryAction}>
-                                        <Copy size={18} color="#FFF" />
-                                        <Text style={styles.secondaryActionText}>Copy</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                <View style={styles.quickUploadGlow} />
                             </View>
-                        </View>
-
-                        {/* Related Images */}
-                        <Text style={styles.relatedTitle}>Related Image</Text>
-                        <View style={styles.relatedRow}>
-                            {GENERATED_IMAGES.map((img) => (
-                                <TouchableOpacity key={img.id} style={styles.relatedCard}>
-                                    <Image source={{ uri: img.uri }} style={styles.relatedImage} />
-                                </TouchableOpacity>
-                            ))}
                         </View>
                     </View>
 
@@ -239,12 +409,14 @@ const styles = StyleSheet.create({
     },
     // Sidebar (240px fixed)
     sidebar: {
-        width: 240,
+        flex: 1.5,
         backgroundColor: '#050507',
-        padding: 24,
+        padding: 16,
+        paddingTop: 32,
         borderRightWidth: 1,
         borderRightColor: '#1a1a20',
         justifyContent: 'space-between',
+        minWidth: 180,
     },
     logoArea: {
         flexDirection: 'row',
@@ -305,15 +477,33 @@ const styles = StyleSheet.create({
 
     // Main Content (Flex Grow)
     mainContent: {
-        flex: 1,
-        padding: 40,
+        flex: 7,
         backgroundColor: '#0A0A0C',
+        minWidth: 600,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 30,
+        padding: 30,
+        paddingHorizontal: 40,
+        paddingBottom: 15,
+    },
+    workspaceScroll: {
+        flex: 1,
+    },
+    workspaceContent: {
+        paddingHorizontal: 40,
+        paddingBottom: 140, // Space for footer prompt
+    },
+    footerPromptArea: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 40,
+        paddingTop: 20,
+        backgroundColor: 'rgba(10, 10, 12, 0.8)',
     },
     headerTitle: {
         color: '#FFF',
@@ -334,117 +524,15 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#333',
     },
-    highlightCard: {
-        flexDirection: 'row',
-        backgroundColor: '#121216',
-        borderRadius: 24,
-        padding: 24,
-        gap: 32,
-        height: 480,
-        borderWidth: 1,
-        borderColor: '#1a1a20',
-        marginBottom: 32,
-    },
-    highlightImageArea: {
-        flex: 1.2,
-        borderRadius: 16,
-        overflow: 'hidden',
-        backgroundColor: '#000',
-    },
-    highlightImage: {
-        width: '100%',
-        height: '100%',
-    },
-    highlightDetails: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    detailTitle: {
-        color: '#FFF',
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 12,
-    },
-    detailCaption: {
-        color: '#888',
-        fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 32,
-    },
-    detailGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 40,
-        marginBottom: 40,
-    },
-    detailLabel: {
-        color: '#555',
-        fontSize: 12,
-        marginBottom: 4,
-    },
-    detailValue: {
-        color: '#DDD',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    detailActions: {
-        flexDirection: 'row',
-        gap: 16,
-    },
-    primaryAction: {
-        flex: 1,
-        height: 48,
-        backgroundColor: '#5865F2', // Reverted to Purple/Blue or Theme Primary?
-        // Reference uses Purple, Yuki uses Gold, user said "Don't sacrifice Color Theme"
-        backgroundColor: '#FFD700',
-        borderRadius: 24,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 8,
-    },
-    primaryActionText: { color: '#000', fontWeight: 'bold' },
-    secondaryAction: {
-        flex: 1,
-        height: 48,
-        borderWidth: 1,
-        borderColor: '#444',
-        borderRadius: 24,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 8,
-    },
-    secondaryActionText: { color: '#FFF', fontWeight: '500' },
-    relatedTitle: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 16,
-    },
-    relatedRow: {
-        flexDirection: 'row',
-        gap: 16,
-        height: 200,
-    },
-    relatedCard: {
-        flex: 1,
-        borderRadius: 16,
-        overflow: 'hidden',
-        backgroundColor: '#1a1a20',
-    },
-    relatedImage: {
-        width: '100%',
-        height: '100%',
-    },
 
     // Control Panel (Narrower ~260px)
     controlPanel: {
-        width: 260,
+        flex: 1.5,
         backgroundColor: '#0F0F12',
         borderLeftWidth: 1,
         borderLeftColor: '#1a1a20',
-        padding: 20,
+        padding: 16,
+        minWidth: 200,
     },
     controlSection: { marginBottom: 24 },
     sectionTitle: {
@@ -549,9 +637,105 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    generateButtonDisabled: {
+        backgroundColor: '#666',
+        opacity: 0.7,
+    },
     mobileContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    // Missing Styles from home.js refactor
+    quickUploadContainer: {
+        marginTop: 20,
+        minHeight: 60,
+        borderRadius: 30,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        position: 'relative',
+    },
+    quickUploadContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    uploadIconBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+    quickUploadButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 8,
+        borderRadius: 20,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quickUploadButtonText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    quickUploadGlow: {
+        position: 'absolute',
+        bottom: -20,
+        left: '10%',
+        right: '10%',
+        height: 40,
+        backgroundColor: 'rgba(255, 215, 0, 0.15)',
+        borderRadius: 20,
+        filter: 'blur(20px)',
+        zIndex: -1,
+    },
+    // Chat Flow Styles
+    chatFlowContainer: {
+        marginBottom: 32,
+        gap: 16,
+    },
+    messageRow: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    userRow: {
+        justifyContent: 'flex-end',
+    },
+    yukiRow: {
+        justifyContent: 'flex-start',
+    },
+    bubble: {
+        maxWidth: '85%',
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        borderRadius: 24,
+        minWidth: 40,
+    },
+    userBubble: {
+        backgroundColor: '#FFD700',
+        borderBottomRightRadius: 4,
+    },
+    yukiBubble: {
+        backgroundColor: '#1a1a20',
+        borderTopLeftRadius: 4,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    userText: {
+        color: '#000',
+        fontSize: 15,
+        fontWeight: '600',
+        lineHeight: 20,
+    },
+    yukiText: {
+        color: '#FFF',
+        fontSize: 15,
+        lineHeight: 24,
     },
 });

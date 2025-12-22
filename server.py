@@ -56,7 +56,8 @@ app.add_middleware(
 # Configuration
 INPUT_DIR = r"C:\Yuki_Local\Inputs"
 OUTPUT_DIR = r"C:\Yuki_Local\Cosplay_Lab\Renders\Server_Output"
-SCRIPT_PATH = r"C:\Yuki_Local\run_paris_single_photo_v12.py"
+SCRIPT_PATH = r"C:\Yuki_Local\image_gen\v14_pipeline.py"
+REF_DIR = r"C:\Yuki_Local\Cosplay_Lab\Subjects"
 PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "us-central1"
 
@@ -158,17 +159,41 @@ class ChatResponse(BaseModel):
     response: str
     metadata: Optional[Dict[str, Any]] = None
 
-async def run_generation_script(input_path: str, request_id: str):
+async def run_generation_script(input_path: str, prompt: str, request_id: str):
     """
     Executes the existing v12 generation pipeline as a subprocess.
     """
-    logger.info(f"Starting generation for {request_id}")
+    logger.info(f"Starting generation for {request_id} with prompt: {prompt}")
+    
+    # Try to find a reference image based on character in prompt
+    # Default to Ichigo if we can't find one.
+    ref_image = os.path.join(REF_DIR, "top15_10_Ichigo_Kurosaki_4k.png")
+    character_name = "Ichigo Kurosaki"
+    
+    # Basic heuristic to match character from prompt
+    for filename in os.listdir(REF_DIR):
+        if filename.endswith(".png"):
+            # e.g. top15_01_Luffy_4k.png -> luffy
+            char_part = filename.split('_')[2].lower()
+            if char_part in prompt.lower():
+                ref_image = os.path.join(REF_DIR, filename)
+                character_name = filename.split('_')[2].replace('_', ' ')
+                break
+
     try:
+        # v12_pipeline.py arguments: --name --character --subject_dir --ref --output
+        subject_dir = os.path.dirname(input_path)
+        
         process = await asyncio.create_subprocess_exec(
             "python", SCRIPT_PATH,
+            "--name", "User_Upload",
+            "--character", character_name,
+            "--subject_dir", subject_dir,
+            "--ref", ref_image,
+            "--output", OUTPUT_DIR,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={**os.environ, "YUKI_INPUT_IMAGE": input_path, "YUKI_USER_EMAIL": "whoentertains@gmail.com"} # Hardcoded for now, should come from request 
+            env={**os.environ, "YUKI_INPUT_IMAGE": input_path, "YUKI_USER_EMAIL": "whoentertains@gmail.com"}
         )
         
         stdout, stderr = await process.communicate()
@@ -242,35 +267,59 @@ async def chat_completions(request: ChatCompletionRequest):
     # 1. Convert OpenAI Messages to Gemini Content
     gemini_contents = []
     
+    first_system_msg = ""
+    for msg in request.messages:
+        if msg.role == "system" and isinstance(msg.content, str):
+            first_system_msg += msg.content + "\n"
+
     for msg in request.messages:
         role = msg.role
+        if role == "system":
+            continue
+            
         content = msg.content
-        
         parts = []
         if content:
-            if isinstance(content, str):
-                parts.append(types.Part(text=content))
+            if isinstance(content, str) and content.strip():
+                # Prepend system msg for the very first user message to preserve context
+                text_to_add = (first_system_msg + content) if not gemini_contents and role == "user" else content
+                parts.append(types.Part(text=text_to_add))
             elif isinstance(content, list):
-                # Handle multimodal content
                 for item in content:
-                    if item.get("type") == "text":
-                        parts.append(types.Part(text=item["text"]))
+                    if item.get("type") == "text" and item.get("text", "").strip():
+                        text_to_add = (first_system_msg + item["text"]) if not gemini_contents and role == "user" else item["text"]
+                        parts.append(types.Part(text=text_to_add))
                     elif item.get("type") == "image_url":
-                         parts.append(types.Part(text=f"[Image URL provided: {item['image_url']['url']}]"))
-        
-        if role == "system":
-            pass # Handled via config
-        elif role == "user":
-            gemini_contents.append(types.Content(role="user", parts=parts))
-        elif role == "assistant":
-             gemini_contents.append(types.Content(role="model", parts=parts))
+                        url = item["image_url"]["url"]
+                        if url.startswith("data:image"):
+                            try:
+                                _, encoded = url.split(",", 1)
+                                image_bytes = base64.b64decode(encoded)
+                                mime = "image/png" if "png" in url else ("image/webp" if "webp" in url else "image/jpeg")
+                                parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
+                                logger.info(f"Merged image part ({mime})")
+                            except Exception as e:
+                                logger.error(f"Image decode fail: {e}")
+                                parts.append(types.Part(text="[Image Error]"))
+                        else:
+                            parts.append(types.Part(text=f"[Image URL: {url}]"))
+
+        if parts:
+            gemini_role = "user" if role == "user" else "model"
+            # 🛡️ ROLE MERGING: Gemini requires strictly alternating User/Model turns.
+            # If the current role matches the previous turn, we merge parts into one turn.
+            if gemini_contents and gemini_contents[-1].role == gemini_role:
+                gemini_contents[-1].parts.extend(parts)
+                logger.debug(f"Merged consecutive {gemini_role} messages")
+            else:
+                gemini_contents.append(types.Content(role=gemini_role, parts=parts))
 
     # 2. Configure Generation
-    model_name = "gemini-3-pro-preview"
-    if "gemini" in request.model:
+    model_name = "gemini-3-flash-preview"
+    if request.model and "gemini" in request.model and "yuki" not in request.model:
         model_name = request.model
     
-    thinking_level = (request.thinking_level or request.reasoning_effort or "high").upper()
+    thinking_level = (request.thinking_level or request.reasoning_effort or "medium").upper()
     
     thinking_config = types.ThinkingConfig(
         include_thoughts=request.include_thoughts,
@@ -306,11 +355,18 @@ async def chat_completions(request: ChatCompletionRequest):
             
             if not response.candidates:
                 finish_reason = "error"
-                final_text = "Error: No response from model."
+                final_text = "Error: No response from the model."
                 break
                 
             candidate = response.candidates[0]
             
+            # 🛡️ Protection: Skip empty contents (triggers 400 if sent back in history)
+            if not candidate.content or not candidate.content.parts:
+                logger.warning(f"Model returned empty content. Finish reason: {candidate.finish_reason}")
+                if not final_text:
+                    final_text = "I hit a safety filter or a limit. Can we try a different approach?"
+                break
+
             function_calls = []
             for part in candidate.content.parts:
                 if part.function_call:
@@ -373,22 +429,26 @@ async def chat_completions(request: ChatCompletionRequest):
     )
 
 @app.post("/generate")
-async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile = File(...), prompt: str = "Ichigo Kurosaki"):
     try:
         # Safe filename
-        filename = f"server_input_{file.filename}"
-        file_location = os.path.join(INPUT_DIR, filename)
+        filename = f"u_{int(time.time())}_{file.filename}"
+        subject_dir = os.path.join(INPUT_DIR, f"sub_{int(time.time())}")
+        os.makedirs(subject_dir, exist_ok=True)
+        
+        file_location = os.path.join(subject_dir, filename)
         
         # Save uploaded file
-        with open(file_location, "wb+") as file_object:
-            shutil.copyfileobj(file.file, file_object)
+        content = await file.read()
+        with open(file_location, "wb") as f:
+            f.write(content)
             
         logger.info(f"File saved to {file_location}")
         
         # Trigger Generation in Background
-        background_tasks.add_task(run_generation_script, file_location, filename)
+        background_tasks.add_task(run_generation_script, file_location, prompt, filename)
         
-        return {"status": "processing", "message": "Image uploaded. Generation started.", "id": filename}
+        return {"status": "processing", "message": "Image uploaded. V12 Pipeline triggered.", "id": filename}
         
     except Exception as e:
         logger.error(f"Upload failed: {e}")
