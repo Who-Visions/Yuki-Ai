@@ -10,42 +10,67 @@ import uvicorn
 import logging
 from typing import Optional, Dict, Any, List, Union, Literal
 import base64
-from dotenv import load_dotenv
-
-load_dotenv() # Load YUKI_API_KEY from .env
-
-# Import Yuki Agent
-import sqlite3
-from agent import YukiAgent
-from yuki_tools import (
-    get_current_time,
-    add_numbers,
-    generate_cosplay_image,
-    generate_cosplay_video,
-    research_topic,
-    list_files,
-    read_file,
-    write_file,
-    search_web,
-    fetch_url,
-    identify_anime_screenshot,
-    detect_objects,
-    segment_image,
-    analyze_video,
-    analyze_pdf,
-    upload_to_gcs,
-    download_from_gcs,
-)
-from yuki_local import YUKI_SYSTEM_PROMPT, Colors
-from google import genai
-from google.genai import types
 import time
 import uuid
-from typing import List, Union
+
+# Early Cloud detection
+IS_CLOUD = os.getenv("K_SERVICE") is not None
+
+# Optional: Load .env for local dev
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("YukiServer")
+
+# Conditional heavy imports
+YukiAgent = None
+tools_imports_ok = False
+
+try:
+    from google import genai
+    from google.genai import types
+    logger.info("GenAI SDK imported successfully")
+except ImportError as e:
+    logger.error(f"Failed to import GenAI SDK: {e}")
+    genai = None
+    types = None
+
+try:
+    from yuki_local import YUKI_SYSTEM_PROMPT, Colors
+except ImportError:
+    YUKI_SYSTEM_PROMPT = "You are Yuki, a helpful AI assistant."
+    class Colors:
+        ICE_BLUE = FOX_FIRE = NEON_PINK = ERROR_RED = RESET = ""
+
+try:
+    from yuki_tools import (
+        get_current_time, add_numbers, generate_cosplay_image, generate_cosplay_video,
+        research_topic, list_files, read_file, write_file, search_web, fetch_url,
+        identify_anime_screenshot, detect_objects, segment_image, analyze_video,
+        analyze_pdf, upload_to_gcs, download_from_gcs,
+    )
+    tools_imports_ok = True
+except ImportError as e:
+    logger.warning(f"Could not import yuki_tools: {e}")
+    # Define stub functions
+    def get_current_time(): return "Tool not available"
+    def add_numbers(a, b): return a + b
+    generate_cosplay_image = generate_cosplay_video = research_topic = None
+    list_files = read_file = write_file = search_web = fetch_url = None
+    identify_anime_screenshot = detect_objects = segment_image = None
+    analyze_video = analyze_pdf = upload_to_gcs = download_from_gcs = None
+
+if not IS_CLOUD:
+    try:
+        from agent import YukiAgent
+        import sqlite3
+    except ImportError as e:
+        logger.warning(f"Could not import local modules: {e}")
 
 app = FastAPI()
 
@@ -57,8 +82,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration
-IS_CLOUD = os.getenv("K_SERVICE") is not None  # Cloud Run sets K_SERVICE
+# Configuration (IS_CLOUD defined at top of file)
 
 if IS_CLOUD:
     INPUT_DIR = "/tmp/inputs"
@@ -82,20 +106,24 @@ try:
 except Exception as e:
     logger.warning(f"Could not create directories: {e}")
 
-# Initialize Agent
-logger.info("Initializing Yuki Agent (Gemini 3)...")
-try:
-    yuki_agent = YukiAgent(
-        model="gemini-3-pro-preview",
-        tools=[get_current_time, add_numbers],
-        project=PROJECT_ID,
-        location="global", # Gemini 3 is global
-    )
-    yuki_agent.set_up()
-    logger.info("Yuki Agent initialized successfully.")
-except Exception as e:
-    logger.error(f"Failed to initialize Yuki Agent: {e}")
-    yuki_agent = None
+# Initialize Agent (Skip on Cloud Run - not needed for chat API)
+yuki_agent = None
+if not IS_CLOUD:
+    logger.info("Initializing Yuki Agent (Gemini 3)...")
+    try:
+        yuki_agent = YukiAgent(
+            model="gemini-3-pro-preview",
+            tools=[get_current_time, add_numbers],
+            project=PROJECT_ID,
+            location="global",
+        )
+        yuki_agent.set_up()
+        logger.info("Yuki Agent initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Yuki Agent: {e}")
+        yuki_agent = None
+else:
+    logger.info("Cloud Run mode: Skipping YukiAgent (using GenAI Client only)")
 
 # Initialize GenAI Client for /v1/chat/completions
 logger.info("Initializing GenAI Client...")
