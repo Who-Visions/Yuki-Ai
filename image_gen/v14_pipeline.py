@@ -288,24 +288,19 @@ async def deep_analysis_pro(
     Analyze the subject photos to extract precise geometric and feature signatures.
     """
     
-    try:
-        response = await client.aio.models.generate_content(
-            model=PRO_MODEL,
-            contents=[prompt] + image_parts,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=IdentityLockResponse,
-                temperature=0.2
-            )
+    response = await client.aio.models.generate_content(
+        model=PRO_MODEL,
+        contents=[prompt] + image_parts,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=IdentityLockResponse,
+            temperature=0.2
         )
-        
-        result = IdentityLockResponse.model_validate_json(response.text)
-        print(f"   ✅ Identity Lock created (confidence: {result.confidence_score})")
-        return result.model_dump()
-        
-    except Exception as e:
-        print(f"   ❌ Stage 3 Failed: {e}")
-        return {}
+    )
+    
+    result = IdentityLockResponse.model_validate_json(response.text)
+    print(f"   ✅ Identity Lock created (confidence: {result.confidence_score})")
+    return result.model_dump()
 
 # =============================================================================
 # RAG: CHARACTER DATA LOOKUP
@@ -560,9 +555,13 @@ class V12Pipeline:
                 return None
             
             # Stage 3
-            identity_lock = await deep_analysis_pro(self.client, subject_name, cv_data, expansion_data, subject_parts)
-            if not identity_lock:
-                self.last_error = "Stage 3: Identity Lock analysis failed."
+            try:
+                identity_lock = await deep_analysis_pro(self.client, subject_name, cv_data, expansion_data, subject_parts)
+                if not identity_lock:
+                    self.last_error = "Stage 3: Identity Lock returned empty."
+                    return None
+            except Exception as e:
+                self.last_error = f"Stage 3 Error: {e}"
                 return None
             
             # Save Lock

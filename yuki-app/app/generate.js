@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     StyleSheet, View, Text, Image, TouchableOpacity, ScrollView,
-    Dimensions, TextInput, useWindowDimensions, LayoutAnimation, Platform
+    Dimensions, TextInput, useWindowDimensions, LayoutAnimation, Platform, Modal
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -37,6 +37,7 @@ export default function ResultScreen() {
         { id: 1, text: "Hey! I'm Yuki. Ready to create something legendary? ✨", sender: 'yuki' }
     ]);
     const [isTyping, setIsTyping] = useState(false);
+    const [fullScreenImage, setFullScreenImage] = useState(null);
 
     // Refs
     const workspaceScrollRef = useRef(null);
@@ -68,7 +69,7 @@ export default function ResultScreen() {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType.Images,
             allowsMultipleSelection: true,
             selectionLimit: 5 - attachedImages.length,
             quality: 1,
@@ -439,7 +440,9 @@ export default function ResultScreen() {
                                             {msg.images && msg.images.length > 0 && (
                                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: msg.text ? 8 : 0 }}>
                                                     {msg.images.map((uri, idx) => (
-                                                        <Image key={idx} source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+                                                        <TouchableOpacity key={idx} onPress={() => setFullScreenImage(uri)}>
+                                                            <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+                                                        </TouchableOpacity>
                                                     ))}
                                                 </View>
                                             )}
@@ -552,6 +555,32 @@ export default function ResultScreen() {
                     <Text style={{ color: '#FFF' }}>Desktop view required for Dashboard.</Text>
                 </View>
             )}
+
+            {/* FULL SCREEN IMAGE MODAL */}
+            <Modal
+                visible={!!fullScreenImage}
+                transparent={true}
+                onRequestClose={() => setFullScreenImage(null)}
+                animationType="fade"
+            >
+                <View style={styles.modalOverlay}>
+                    <TouchableOpacity
+                        style={styles.modalCloseButton}
+                        onPress={() => setFullScreenImage(null)}
+                    >
+                        <X color="#FFF" size={30} />
+                    </TouchableOpacity>
+                    <View style={styles.modalContent}>
+                        {fullScreenImage && (
+                            <Image
+                                source={{ uri: fullScreenImage }}
+                                style={styles.fullScreenImage}
+                                resizeMode="contain"
+                            />
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -910,10 +939,32 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 215, 0, 0.3)',
         borderTopColor: '#FFD700',
         borderRightColor: '#FF8C00',
-        // CSS animation for web
-        ...(Platform.OS === 'web' && {
-            animation: 'spin 1s linear infinite',
-        }),
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '90%',
+        height: '90%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fullScreenImage: {
+        width: '100%',
+        height: '100%',
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 40,
+        right: 40,
+        zIndex: 20,
+        padding: 10,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 25,
     },
 });
 
