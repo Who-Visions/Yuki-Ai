@@ -553,29 +553,107 @@ async def chat_completions(request: ChatCompletionRequest):
 @app.post("/generate")
 async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile = File(...), prompt: str = "Ichigo Kurosaki"):
     """
-    Generate cosplay image using Gemini Pro Image.
-    Cloud Run: Uses Gemini API directly
-    Local: Uses v12/v14 pipeline
+    Generate cosplay image using V14 Pipeline.
+    Cloud Run: Runs V14 pipeline synchronously
+    Local: Uses v14 pipeline via subprocess
     """
+    import base64
+    from pathlib import Path
+    
     try:
         # Read the uploaded file
         content = await file.read()
-        logger.info(f"Received file: {file.filename}, size: {len(content)} bytes")
+        logger.info(f"Received file: {file.filename}, size: {len(content)} bytes, prompt: {prompt}")
+        
+        # Save uploaded file
+        timestamp = int(time.time())
+        filename = f"u_{timestamp}_{file.filename}"
+        subject_dir = os.path.join(INPUT_DIR, f"sub_{timestamp}")
+        os.makedirs(subject_dir, exist_ok=True)
+        
+        file_location = os.path.join(subject_dir, filename)
+        with open(file_location, "wb") as f:
+            f.write(content)
+        logger.info(f"File saved to {file_location}")
         
         if IS_CLOUD:
-            # Cloud Run: Use Gemini Pro Image directly
-            if not genai_client:
-                return {"status": "error", "message": "GenAI client not initialized"}
-            
-            from google.genai import types
-            import base64
-            
-            # Prepare the image part
-            mime_type = file.content_type or "image/jpeg"
-            image_part = types.Part.from_bytes(data=content, mime_type=mime_type)
-            
-            # Build generation prompt
-            generation_prompt = f"""COSPLAY TRANSFORMATION
+            # Cloud Run: Run V14 pipeline directly (imported)
+            try:
+                # Import the pipeline module
+                import sys
+                sys.path.insert(0, "/app/image_gen")
+                from v14_pipeline import V12Pipeline
+                
+                # Get reference image from GCS
+                ref_image = download_reference_from_gcs(prompt)
+                if not ref_image:
+                    # Fallback: Use Gemini Pro Image directly
+                    logger.warning("No reference found, using Gemini Pro Image fallback")
+                    return await _gemini_pro_image_fallback(content, file.content_type, prompt)
+                
+                # Run the full V14 pipeline
+                pipeline = V12Pipeline(project_id=PROJECT_ID)
+                
+                # Prepare paths
+                subject_path = Path(subject_dir)
+                ref_path = Path(ref_image)
+                output_path = Path(OUTPUT_DIR)
+                
+                # Run pipeline (async)
+                await pipeline.run(
+                    subject_name="User",
+                    target_character=prompt,
+                    subject_dir=subject_path,
+                    reference_path=ref_path,
+                    output_dir=output_path,
+                    bypass_lock=False
+                )
+                
+                # Find generated image
+                generated_files = sorted(output_path.glob("gen_*.png"), key=os.path.getmtime, reverse=True)
+                if generated_files:
+                    with open(generated_files[0], "rb") as f:
+                        image_data = f.read()
+                    image_b64 = base64.b64encode(image_data).decode('utf-8')
+                    return {
+                        "status": "success",
+                        "message": "V14 Pipeline render complete!",
+                        "image": f"data:image/png;base64,{image_b64}",
+                        "prompt": prompt,
+                        "pipeline": "V14"
+                    }
+                else:
+                    return {"status": "error", "message": "Pipeline completed but no image found."}
+                    
+            except ImportError as ie:
+                logger.error(f"Pipeline import failed: {ie}")
+                return await _gemini_pro_image_fallback(content, file.content_type, prompt)
+            except Exception as pe:
+                logger.error(f"Pipeline execution failed: {pe}")
+                return {"status": "error", "message": f"V14 Pipeline failed: {str(pe)}"}
+        
+        else:
+            # Local: Use v14 pipeline via subprocess
+            background_tasks.add_task(run_generation_script, file_location, prompt, filename)
+            return {"status": "processing", "message": "Image uploaded. V14 Pipeline triggered.", "id": filename}
+        
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+async def _gemini_pro_image_fallback(content: bytes, mime_type: str, prompt: str):
+    """Fallback to Gemini Pro Image when V14 pipeline is unavailable."""
+    import base64
+    from google.genai import types
+    
+    if not genai_client:
+        return {"status": "error", "message": "GenAI client not initialized"}
+    
+    mime = mime_type or "image/jpeg"
+    image_part = types.Part.from_bytes(data=content, mime_type=mime)
+    
+    generation_prompt = f"""COSPLAY TRANSFORMATION
 
 Subject: The person in the uploaded photo
 Character: {prompt}
@@ -590,60 +668,35 @@ REQUIREMENTS:
 - Full body or portrait shot as appropriate
 
 Generate a stunning cosplay transformation image."""
-            
-            try:
-                response = await genai_client.aio.models.generate_content(
-                    model="gemini-3-pro-image-preview",
-                    contents=[
-                        "=== SUBJECT PHOTO ===",
-                        image_part,
-                        generation_prompt
-                    ],
-                    config=types.GenerateContentConfig(
-                        response_modalities=['IMAGE', 'TEXT'],
-                        temperature=1.0
-                    )
-                )
-                
-                # Extract generated image
-                if response.candidates and response.candidates[0].content:
-                    for part in response.candidates[0].content.parts:
-                        if hasattr(part, 'inline_data') and part.inline_data:
-                            image_data = part.inline_data.data
-                            image_b64 = base64.b64encode(image_data).decode('utf-8')
-                            return {
-                                "status": "success",
-                                "message": "Render complete!",
-                                "image": f"data:image/png;base64,{image_b64}",
-                                "prompt": prompt
-                            }
-                
-                return {"status": "error", "message": "No image generated. The model may have blocked the request."}
-                
-            except Exception as gen_e:
-                logger.error(f"Generation failed: {gen_e}")
-                return {"status": "error", "message": f"Generation failed: {str(gen_e)}"}
+    
+    try:
+        response = await genai_client.aio.models.generate_content(
+            model="gemini-3-pro-image-preview",
+            contents=["=== SUBJECT PHOTO ===", image_part, generation_prompt],
+            config=types.GenerateContentConfig(
+                response_modalities=['IMAGE', 'TEXT'],
+                temperature=1.0
+            )
+        )
         
-        else:
-            # Local: Use v12/v14 pipeline
-            filename = f"u_{int(time.time())}_{file.filename}"
-            subject_dir = os.path.join(INPUT_DIR, f"sub_{int(time.time())}")
-            os.makedirs(subject_dir, exist_ok=True)
-            
-            file_location = os.path.join(subject_dir, filename)
-            with open(file_location, "wb") as f:
-                f.write(content)
-                
-            logger.info(f"File saved to {file_location}")
-            
-            # Trigger Generation in Background
-            background_tasks.add_task(run_generation_script, file_location, prompt, filename)
-            
-            return {"status": "processing", "message": "Image uploaded. V12 Pipeline triggered.", "id": filename}
+        if response.candidates and response.candidates[0].content:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data:
+                    image_data = part.inline_data.data
+                    image_b64 = base64.b64encode(image_data).decode('utf-8')
+                    return {
+                        "status": "success",
+                        "message": "Render complete (Gemini Pro Image)!",
+                        "image": f"data:image/png;base64,{image_b64}",
+                        "prompt": prompt,
+                        "pipeline": "GeminiProImage"
+                    }
+        
+        return {"status": "error", "message": "No image generated. Model may have blocked the request."}
         
     except Exception as e:
-        logger.error(f"Upload failed: {e}")
-        return {"status": "error", "message": str(e)}
+        logger.error(f"Gemini fallback failed: {e}")
+        return {"status": "error", "message": f"Generation failed: {str(e)}"}
 
 @app.get("/health")
 def health_check():
