@@ -64,6 +64,7 @@ SCRIPT_PATH = r"C:\Yuki_Local\image_gen\v14_pipeline.py"
 REF_DIR = r"C:\Yuki_Local\Cosplay_Lab\Subjects"
 PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "us-central1"
+RE_ID = "projects/914641083224/locations/us-central1/reasoningEngines/8949824538980384768"
 
 # Ensure directories exist
 os.makedirs(INPUT_DIR, exist_ok=True)
@@ -88,19 +89,18 @@ except Exception as e:
 logger.info("Initializing GenAI Client...")
 try:
     api_key = os.getenv("YUKI_API_KEY")
-    client_params = {
-        "project": PROJECT_ID,
-        "location": "global",
-    }
-    
     if api_key:
-        client_params["api_key"] = api_key
+        # 🔑 API Key mode (Don't provide project/location as they are for Vertex mode)
+        genai_client = genai.Client(api_key=api_key)
         logger.info("Found YUKI_API_KEY, using for authentication.")
     else:
-        client_params["vertexai"] = True
+        # ☁️ Vertex AI mode
+        genai_client = genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location="global",
+        )
         logger.info("No API key found, falling back to Vertex AI default auth.")
-
-    genai_client = genai.Client(**client_params)
     logger.info("GenAI Client initialized.")
 except Exception as e:
     logger.error(f"Failed to initialize GenAI Client: {e}")
@@ -279,10 +279,7 @@ async def chat_completions(request: ChatCompletionRequest):
     
     # 1. Convert OpenAI Messages to Gemini Content
     gemini_contents = []
-    system_instructions = ""
-    for msg in request.messages:
-        if msg.role == "system":
-            system_instructions += str(msg.content or "") + "\n"
+    last_gemini_role = None
 
     for msg in request.messages:
         if msg.role == "system":
@@ -302,37 +299,41 @@ async def chat_completions(request: ChatCompletionRequest):
                     url = item["image_url"]["url"]
                     if url.startswith("data:image"):
                         try:
-                            _, encoded = url.split(",", 1)
+                            # Robust decoding with header check
+                            header, encoded = url.split(",", 1)
                             image_bytes = base64.b64decode(encoded)
-                            mime = "image/png" if "png" in url else ("image/webp" if "webp" in url else "image/jpeg")
+                            mime = "image/png" if "png" in header else ("image/webp" if "webp" in header else "image/jpeg")
                             parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
                         except Exception as e:
-                            logger.error(f"Image decode error: {e}")
+                            logger.error(f"Image decode fatal error: {e}")
                     else:
-                        parts.append(types.Part(text=f"[Image: {url}]"))
+                        parts.append(types.Part(text=f"[Reference Image URL: {url}]"))
 
         if not parts:
             continue
 
         gemini_role = "user" if role == "user" else "model"
         
-        # 🛡️ Gemini Enforcement: FIRST message must be USER. 
-        if not gemini_contents and gemini_role == "model":
-            logger.warning("Skipping leading model message to ensure User-first start.")
-            continue
-
-        # 🛡️ Gemini Enforcement: ALTERNATE roles.
-        if gemini_contents and gemini_contents[-1].role == gemini_role:
+        # 🛡️ ROLE ALTERNATION GUARD
+        if last_gemini_role == gemini_role:
             gemini_contents[-1].parts.extend(parts)
-            logger.debug(f"Merged consecutive {gemini_role} message.")
+            logger.debug(f"Merged identical role turn: {gemini_role}")
         else:
+            if not gemini_contents and gemini_role == "model":
+                logger.warning("Intercepted leading model message; skipping to satisfy User-first requirement.")
+                continue
+            
             gemini_contents.append(types.Content(role=gemini_role, parts=parts))
+            last_gemini_role = gemini_role
 
-    # Log Payload for Debugging
-    logger.info(f"Final Gemini Payload: {len(gemini_contents)} turns. Role Sequence: {[c.role for c in gemini_contents]}")
+    if not gemini_contents:
+        gemini_contents.append(types.Content(role="user", parts=[types.Part(text="Hello Yuki!")]))
+
+    # Log Sequence
+    logger.info(f"🚀 Dispatching Gemini Request: {len(gemini_contents)} turns | roles: {[c.role for c in gemini_contents]}")
 
     # 2. Configure Generation
-    model_name = "gemini-3-flash-preview"
+    model_name = "gemini-1.5-flash"
     if request.model and "gemini" in request.model and "yuki" not in request.model:
         model_name = request.model
     
@@ -473,7 +474,21 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
 
 @app.get("/health")
 def health_check():
-    return {"status": "online", "system": "Yuki AI Server", "agent_status": "ready" if yuki_agent else "offline"}
+    return {
+        "status": "online", 
+        "system": "Yuki AI Server", 
+        "agent_status": "ready" if yuki_agent else "offline",
+        "project": PROJECT_ID,
+        "config": "stabilized-v2"
+    }
+
+@app.get("/v1/debug")
+def debug_info():
+    return {
+        "reasoning_engine": RE_ID,
+        "location": LOCATION,
+        "model_default": "gemini-1.5-flash"
+    }
 
 @app.get("/v1/user/images")
 async def get_user_images(email: str):

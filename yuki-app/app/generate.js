@@ -195,7 +195,7 @@ export default function ResultScreen() {
             formData.append('file', { uri, name, type });
             formData.append('prompt', genPrompt);
 
-            const response = await fetch('http://localhost:8000/generate', {
+            const response = await fetch('https://yuki-ai-914641083224.us-central1.run.app/generate', {
                 method: 'POST',
                 body: formData,
                 headers: { 'Accept': 'application/json' },
@@ -259,7 +259,7 @@ export default function ResultScreen() {
             const imageParts = await prepareImages();
 
             // Chat with Yuki first
-            const chatRes = await fetch('http://localhost:8000/v1/chat/completions', {
+            const chatRes = await fetch('https://yuki-ai-914641083224.us-central1.run.app/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

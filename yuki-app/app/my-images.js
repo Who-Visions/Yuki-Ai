@@ -18,7 +18,7 @@ export default function MyImagesScreen() {
 
     const fetchUserImages = async (email) => {
         try {
-            const response = await fetch(`http://localhost:8000/v1/user/images?email=${email}`);
+            const response = await fetch(`https://yuki-ai-914641083224.us-central1.run.app/v1/user/images?email=${email}`);
             const data = await response.json();
             if (data.images) {
                 setImages(data.images);
