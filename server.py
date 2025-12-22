@@ -611,7 +611,8 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
                         "pipeline": "V14"
                     }
                 else:
-                    return {"status": "error", "message": "V14 Pipeline failed to generate image."}
+                    error_msg = getattr(pipeline, 'last_error', 'Unknown pipeline error')
+                    return {"status": "error", "message": f"V14 Pipeline failed: {error_msg}"}
                     
             except ImportError as ie:
                 logger.error(f"Pipeline import failed: {ie}")

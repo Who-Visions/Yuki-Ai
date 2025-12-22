@@ -486,6 +486,8 @@ class V12Pipeline:
         bypass_lock: bool = False
     ) -> Optional[bytes]:
         """Run the V14 pipeline and return generated image bytes."""
+        self.last_error = None  # Reset error tracking
+        
         output_dir.mkdir(parents=True, exist_ok=True)
         safe_name = re.sub(r'[^a-zA-Z0-9]', '_', subject_name).lower()
         lock_path = output_dir / f"v12_lock_{safe_name}.json"
@@ -500,8 +502,9 @@ class V12Pipeline:
                  subject_images = sorted(list(subject_dir.glob("*.png")))[:4]
         
         if not subject_images:
-            print(f"❌ No suitable images found in {subject_dir}")
-            return
+            self.last_error = f"No suitable images found in {subject_dir}"
+            print(f"❌ {self.last_error}")
+            return None
             
         subject_parts = []
         for img in subject_images:
@@ -518,15 +521,26 @@ class V12Pipeline:
         
         if not identity_lock:
             # Stage 1
-            cv_data = self.cv_analyzer.detect_face(subject_images[0])
+            try:
+                cv_data = self.cv_analyzer.detect_face(subject_images[0])
+                if not cv_data:
+                    self.last_error = "Stage 1: Cloud Vision failed to detect face."
+                    return None
+            except Exception as e:
+                self.last_error = f"Stage 1 Error: {e}"
+                return None
             
             # Stage 2
             expansion_data = await expand_to_68_points(self.client, cv_data, subject_parts)
-            if not expansion_data: return
+            if not expansion_data:
+                self.last_error = "Stage 2: 68-point expansion failed."
+                return None
             
             # Stage 3
             identity_lock = await deep_analysis_pro(self.client, subject_name, cv_data, expansion_data, subject_parts)
-            if not identity_lock: return
+            if not identity_lock:
+                self.last_error = "Stage 3: Identity Lock analysis failed."
+                return None
             
             # Save Lock
             with open(lock_path, "w", encoding="utf-8") as f:
@@ -536,6 +550,9 @@ class V12Pipeline:
         # Stage 4
         image_data = await generate_image(self.client, subject_name, target_character, identity_lock, subject_parts, reference_path)
         
+        if not image_data:
+             self.last_error = "Stage 4: Image generation returned no data."
+             
         if image_data:
             # --- DB & SECURE FILENAME LOGGING ---
             try:

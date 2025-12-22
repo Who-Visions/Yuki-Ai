@@ -193,13 +193,19 @@ export default function ResultScreen() {
         </ScrollView>
     );
 
-    const runGeneration = async (genPrompt) => {
+    const runGeneration = async (genPrompt, inputImages) => {
+        const imagesToUse = inputImages || attachedImages;
+        if (!imagesToUse || imagesToUse.length === 0) {
+            setMessages(prev => [...prev, { id: Date.now(), text: "⚠️ No reference photo found for generation.", sender: 'yuki' }]);
+            return;
+        }
+
         setIsGenerating(true);
         setMessages(prev => [...prev, { id: Date.now(), text: "🎨 Rendering your transformation...", sender: 'yuki' }]);
 
         try {
             const formData = new FormData();
-            const uri = attachedImages[0];
+            const uri = imagesToUse[0];
             const name = uri.split('/').pop() || 'image.jpg';
             const type = 'image/jpeg';
 
@@ -261,21 +267,23 @@ export default function ResultScreen() {
             .slice(-6);
 
         // Include images in the user message for display
+        const currentAttachedImages = [...attachedImages]; // Capture local copy
         const userMsg = {
             id: Date.now(),
             text: currentPrompt,
             sender: 'user',
-            images: attachedImages.length > 0 ? [...attachedImages] : undefined
+            images: currentAttachedImages.length > 0 ? currentAttachedImages : undefined
         };
         setMessages(prev => [...prev, userMsg]);
         setPrompt("");
+        setAttachedImages([]); // Clear images from UI immediately
         setIsTyping(true);
 
         try {
             // Helper: Convert local URIs to Base64 for the Chat API
             const prepareImages = async () => {
                 const parts = [];
-                for (const uri of attachedImages) {
+                for (const uri of currentAttachedImages) { // Use local copy
                     try {
                         let base64Content = '';
                         let mime = 'image/jpeg';
@@ -360,8 +368,8 @@ export default function ResultScreen() {
                 setMessages(prev => [...prev, { id: Date.now() + 1, text: yukiText, sender: 'yuki' }]);
 
                 // 🚀 Agentic Trigger: Let Yuki decide when to start the render
-                if (yukiAction === 'generate' && attachedImages.length > 0) {
-                    await runGeneration(refinedPrompt);
+                if (yukiAction === 'generate' && currentAttachedImages.length > 0) {
+                    await runGeneration(refinedPrompt, currentAttachedImages);
                 }
             } else {
                 const errorText = await chatRes.text();
@@ -492,12 +500,21 @@ export default function ResultScreen() {
                                             </View>
                                         )}
                                         <TextInput
-                                            style={{ color: '#FFF', fontSize: 16, minHeight: 40, maxHeight: 120, textAlignVertical: 'center' }}
+                                            style={{ color: '#FFF', fontSize: 16, minHeight: 40, maxHeight: 120, textAlignVertical: 'center', outlineStyle: 'none' }}
                                             placeholder="Add instructions or change character..."
                                             placeholderTextColor="rgba(255,255,255,0.5)"
                                             value={prompt}
                                             onChangeText={setPrompt}
                                             multiline={true}
+                                            onKeyPress={(e) => {
+                                                if (Platform.OS === 'web') {
+                                                    if (e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleInteraction();
+                                                    }
+                                                }
+                                            }}
+                                            onSubmitEditing={handleInteraction}
                                             onContentSizeChange={() => {
                                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                             }}
