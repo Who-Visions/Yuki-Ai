@@ -784,5 +784,24 @@ async def get_user_credits(email: str):
     return {"credits": credits}
 
 
+@app.get("/agent.json")
+async def get_agent_card():
+    card_path = "agent.json"
+    # Check current directory
+    if os.path.exists(card_path):
+        return FileResponse(card_path, media_type="application/json")
+    # Check /app directory (Cloud Run standard)
+    elif os.path.exists("/app/agent.json"):
+        return FileResponse("/app/agent.json", media_type="application/json")
+    # Check mapped volume if applicable or dev path
+    elif os.path.exists(r"C:\Yuki_Local\agent.json"):
+        return FileResponse(r"C:\Yuki_Local\agent.json", media_type="application/json")
+    else:
+        raise HTTPException(status_code=404, detail="Agent card not found")
+
+@app.get("/.well-known/a2a/agent.json")
+async def get_well_known_agent_card():
+    return await get_agent_card()
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

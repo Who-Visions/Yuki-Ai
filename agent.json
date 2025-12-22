@@ -1,0 +1,61 @@
+{
+    "name": "Yuki Ai",
+    "description": "Lead Cosplay Architect and visuals specialist. Yuki transforms users into high-fidelity cosplay renders using 'Identity Lock' technology while maintaining their facial features. She also provides stylistic advice and character recommendations.",
+    "version": "1.4.0",
+    "url": "https://yuki-ai-4gig-914641083224.us-central1.run.app",
+    "doc_url": "https://github.com/Who-Visions/Yuki-Ai",
+    "capabilities": {
+        "reasoning": true,
+        "vision": true,
+        "tools": true
+    },
+    "skills": [
+        {
+            "id": "cosplay_generation",
+            "name": "Cosplay Image Generation",
+            "description": "Generates photorealistic or stylized cosplay images of the user as a specified character, preserving facial identity.",
+            "input_modes": [
+                "text",
+                "image"
+            ],
+            "output_modes": [
+                "image",
+                "text"
+            ],
+            "tags": [
+                "image_generation",
+                "cosplay",
+                "identity_lock"
+            ]
+        },
+        {
+            "id": "anime_consultation",
+            "name": "Anime & Cosplay Consultation",
+            "description": "Provides expert advice on character choices, costume details, and styling based on user features.",
+            "input_modes": [
+                "text",
+                "image"
+            ],
+            "output_modes": [
+                "text"
+            ],
+            "tags": [
+                "consultation",
+                "anime",
+                "knowledge"
+            ]
+        }
+    ],
+    "default_input_modes": [
+        "text",
+        "image"
+    ],
+    "default_output_modes": [
+        "text",
+        "image"
+    ],
+    "provider": {
+        "name": "Who Visions",
+        "url": "https://who-visions.com"
+    }
+}
