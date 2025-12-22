@@ -591,8 +591,8 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
                 subject_path = Path(subject_dir)
                 output_path = Path(OUTPUT_DIR)
                 
-                # Run pipeline (async) - no reference_path needed
-                await pipeline.run(
+                # Run pipeline (async) - returns image bytes directly
+                image_data = await pipeline.run(
                     subject_name="User",
                     target_character=prompt,
                     subject_dir=subject_path,
@@ -600,11 +600,8 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
                     bypass_lock=False
                 )
                 
-                # Find generated image
-                generated_files = sorted(output_path.glob("gen_*.png"), key=os.path.getmtime, reverse=True)
-                if generated_files:
-                    with open(generated_files[0], "rb") as f:
-                        image_data = f.read()
+                # Check if image was generated
+                if image_data:
                     image_b64 = base64.b64encode(image_data).decode('utf-8')
                     return {
                         "status": "success",
@@ -614,7 +611,7 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
                         "pipeline": "V14"
                     }
                 else:
-                    return {"status": "error", "message": "Pipeline completed but no image found."}
+                    return {"status": "error", "message": "V14 Pipeline failed to generate image."}
                     
             except ImportError as ie:
                 logger.error(f"Pipeline import failed: {ie}")

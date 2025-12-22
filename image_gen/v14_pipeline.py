@@ -484,7 +484,8 @@ class V12Pipeline:
         output_dir: Path,
         reference_path: Optional[Path] = None,
         bypass_lock: bool = False
-    ):
+    ) -> Optional[bytes]:
+        """Run the V14 pipeline and return generated image bytes."""
         output_dir.mkdir(parents=True, exist_ok=True)
         safe_name = re.sub(r'[^a-zA-Z0-9]', '_', subject_name).lower()
         lock_path = output_dir / f"v12_lock_{safe_name}.json"
@@ -604,6 +605,13 @@ class V12Pipeline:
                 if image_data and 'filename' not in locals():
                      with open(output_dir / f"fallback_{timestamp}.png", "wb") as f:
                         f.write(image_data)
+            
+            # Return the image data for server.py to use
+            return image_data
+        
+        # No image generated
+        print("   ⚠️ No image data returned from generate_image")
+        return None
 
 async def main():
     parser = argparse.ArgumentParser(description="V12 Cosplay Generator (Structured)")
