@@ -247,7 +247,8 @@ async def expand_to_68_points(
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=LandmarkExpansionResponse,
-                temperature=0.1
+                temperature=0.1,
+                thinking_config=types.ThinkingConfig(thinking_level="low")
             )
         )
         
