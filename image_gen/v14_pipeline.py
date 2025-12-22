@@ -36,9 +36,10 @@ PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "global"
 
 # Model Assignments
+# Model Assignments
 FLASH_MODEL = "gemini-3-flash-preview"      # Stage 2: 68-point expansion
 PRO_MODEL = "gemini-3-pro-preview"          # Stage 3: Deep analysis
-IMAGE_MODEL = "gemini-3-pro-image-preview"  # Stage 4: Generation
+IMAGE_MODEL = "gemini-3-pro-image-preview"  # Stage 4: Generation (Nano Banana Pro)
 
 # =============================================================================
 # PYDANTIC SCHEMAS (STRUCTURED OUTPUTS)
@@ -457,11 +458,15 @@ CHARACTER DATABASE ENTRY:
     
     print(f"   🚀 Generating with {IMAGE_MODEL}...")
     try:
+        # Gemini 3 Pro Image (Nano Banana Pro) Configuration
         response = await client.aio.models.generate_content(
             model=IMAGE_MODEL,
             contents=contents,
             config=types.GenerateContentConfig(
-                response_modalities=['IMAGE', 'TEXT'],
+                image_config=types.ImageConfig(
+                    aspect_ratio="9:16",
+                    image_size="4K"
+                ),
                 temperature=1.0
             )
         )
