@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 import subprocess
 import uvicorn
 import logging
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Dict, Any, List, Union, Literal
 import base64
 from dotenv import load_dotenv
 
@@ -127,6 +127,13 @@ tools_list = [
     download_from_gcs,
 ]
 tool_map = {func.__name__: func for func in tools_list}
+
+# Structured Output Models
+class YukiResponse(BaseModel):
+    thought: str = Field(description="Your internal reasoning about the cosplay architect process.")
+    message: str = Field(description="Clear, encouraging message to the user.")
+    action: Literal["chat", "generate", "ask_for_photo", "refuse"] = Field(description="The logical next step.")
+    refined_prompt: Optional[str] = Field(description="Engine-optimized prompt (Imagen 3 style) if action is 'generate'.", default=None)
 
 # OpenAI Compatible Models
 class ChatMessage(BaseModel):
@@ -333,6 +340,7 @@ async def chat_completions(request: ChatCompletionRequest):
     logger.info(f"🚀 Dispatching Gemini Request: {len(gemini_contents)} turns | roles: {[c.role for c in gemini_contents]}")
 
     # 2. Configure Generation
+    is_yuki = "yuki" in request.model.lower()
     model_name = "gemini-1.5-flash"
     if request.model and "gemini" in request.model and "yuki" not in request.model:
         model_name = request.model
@@ -346,14 +354,25 @@ async def chat_completions(request: ChatCompletionRequest):
     if request.thinking_budget is not None:
         thinking_config.thinking_budget = request.thinking_budget
 
-    config = types.GenerateContentConfig(
-        tools=tools_list,
-        temperature=request.temperature if request.temperature != 0.7 else 1.0, 
-        top_p=request.top_p,
-        candidate_count=1,
-        system_instruction=YUKI_SYSTEM_PROMPT,
-        thinking_config=thinking_config
-    )
+    gen_config = {
+        "tools": tools_list,
+        "temperature": request.temperature if request.temperature != 0.7 else 1.0, 
+        "top_p": request.top_p,
+        "candidate_count": 1,
+        "system_instruction": YUKI_SYSTEM_PROMPT,
+    }
+    
+    # Enable thinking/reasoning if applicable
+    if "pro" in model_name.lower() and not is_yuki:
+        gen_config["thinking_config"] = thinking_config
+
+    # Apply Structured Output for Yuki
+    if is_yuki:
+        gen_config["response_mime_type"] = "application/json"
+        gen_config["response_json_schema"] = YukiResponse.model_json_schema()
+        logger.info("Enabling Structured Output (YukiResponse)")
+
+    config = types.GenerateContentConfig(**gen_config)
 
     # 3. Execution Loop
     final_text = ""
@@ -378,11 +397,14 @@ async def chat_completions(request: ChatCompletionRequest):
                 
             candidate = response.candidates[0]
             
-            # 🛡️ Protection: Skip empty contents (triggers 400 if sent back in history)
+            # 🛡️ Protection: Skip empty contents
             if not candidate.content or not candidate.content.parts:
                 logger.warning(f"Model returned empty content. Finish reason: {candidate.finish_reason}")
                 if not final_text:
-                    final_text = "I hit a safety filter or a limit. Can we try a different approach?"
+                    if is_yuki:
+                        final_text = '{"thought": "Safety triggered", "message": "I hit a snag. Let\'s try a different vibe.", "action": "chat"}'
+                    else:
+                        final_text = "I hit a safety filter or a limit."
                 break
 
             function_calls = []
