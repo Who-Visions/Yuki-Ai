@@ -567,7 +567,8 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
         
         # Save uploaded file
         timestamp = int(time.time())
-        filename = f"u_{timestamp}_{file.filename}"
+        safe_filename = file.filename.rsplit('.', 1)[0] + ".jpg" # Force .jpg extension
+        filename = f"u_{timestamp}_{safe_filename}"
         subject_dir = os.path.join(INPUT_DIR, f"sub_{timestamp}")
         os.makedirs(subject_dir, exist_ok=True)
         

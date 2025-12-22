@@ -494,12 +494,14 @@ class V12Pipeline:
         
         print(f"⚡ V12 PIPELINE START for {subject_name} as {target_character}")
         
-        # Load Images
-        subject_images = sorted(list(subject_dir.glob(f"*{subject_name.split()[0].lower()}*.jpg")))[:4]
-        if not subject_images:
-            subject_images = sorted(list(subject_dir.glob("*.jpg")))[:4]
-            if not subject_images:
-                 subject_images = sorted(list(subject_dir.glob("*.png")))[:4]
+        # Load Images (Case-insensitive search for common extensions)
+        extensions = ["*.jpg", "*.jpeg", "*.png", "*.webp", "*.JPG", "*.JPEG", "*.PNG", "*.WEBP"]
+        subject_images = []
+        for ext in extensions:
+            subject_images.extend(subject_dir.glob(ext))
+            
+        subject_images = sorted(list(set(subject_images)))[:4] # Deduplicate and limit
+
         
         if not subject_images:
             self.last_error = f"No suitable images found in {subject_dir}"
