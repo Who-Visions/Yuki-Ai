@@ -464,6 +464,7 @@ CHARACTER DATABASE ENTRY:
             model=IMAGE_MODEL,
             contents=contents,
             config=types.GenerateContentConfig(
+                response_modalities=['TEXT', 'IMAGE'],
                 image_config=types.ImageConfig(
                     aspect_ratio="9:16",
                     image_size="4K"
