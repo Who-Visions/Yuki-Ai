@@ -249,12 +249,38 @@ export default function ResultScreen() {
                 const parts = [];
                 for (const uri of attachedImages) {
                     try {
-                        const base64Content = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-                        const mime = uri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+                        let base64Content = '';
+                        let mime = 'image/jpeg';
+
+                        // Check if running on web
+                        if (Platform.OS === 'web') {
+                            // For web: fetch the blob and convert to base64
+                            const response = await fetch(uri);
+                            const blob = await response.blob();
+                            mime = blob.type || 'image/jpeg';
+
+                            base64Content = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                    const dataUrl = reader.result;
+                                    // Extract base64 from data URL
+                                    const base64 = dataUrl.split(',')[1];
+                                    resolve(base64);
+                                };
+                                reader.onerror = reject;
+                                reader.readAsDataURL(blob);
+                            });
+                        } else {
+                            // For mobile: use FileSystem
+                            base64Content = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+                            mime = uri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+                        }
+
                         parts.push({
                             type: "image_url",
                             image_url: { url: `data:${mime};base64,${base64Content}` }
                         });
+                        console.log("✅ Image converted to base64, length:", base64Content.length);
                     } catch (e) {
                         console.error("Image conversion failed:", e);
                     }
@@ -554,7 +580,7 @@ const styles = StyleSheet.create({
     },
     workspaceContent: {
         paddingHorizontal: 40,
-        paddingBottom: 140, // Space for footer prompt
+        paddingBottom: 220, // Space for footer prompt
     },
     footerPromptArea: {
         position: 'absolute',
