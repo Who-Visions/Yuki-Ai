@@ -577,34 +577,25 @@ async def generate_cosplay(background_tasks: BackgroundTasks, file: UploadFile =
         logger.info(f"File saved to {file_location}")
         
         if IS_CLOUD:
-            # Cloud Run: Run V14 pipeline directly (imported)
+            # Cloud Run: Run V14 pipeline directly (no reference images needed - RAG/DB has character data)
             try:
                 # Import the pipeline module
                 import sys
                 sys.path.insert(0, "/app/image_gen")
                 from v14_pipeline import V12Pipeline
                 
-                # Get reference image from GCS
-                ref_image = download_reference_from_gcs(prompt)
-                if not ref_image:
-                    # Fallback: Use Gemini Pro Image directly
-                    logger.warning("No reference found, using Gemini Pro Image fallback")
-                    return await _gemini_pro_image_fallback(content, file.content_type, prompt)
-                
-                # Run the full V14 pipeline
+                # Run the full V14 pipeline (no reference needed - Gemini knows characters)
                 pipeline = V12Pipeline(project_id=PROJECT_ID)
                 
                 # Prepare paths
                 subject_path = Path(subject_dir)
-                ref_path = Path(ref_image)
                 output_path = Path(OUTPUT_DIR)
                 
-                # Run pipeline (async)
+                # Run pipeline (async) - no reference_path needed
                 await pipeline.run(
                     subject_name="User",
                     target_character=prompt,
                     subject_dir=subject_path,
-                    reference_path=ref_path,
                     output_dir=output_path,
                     bypass_lock=False
                 )

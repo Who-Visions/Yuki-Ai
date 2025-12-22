@@ -297,37 +297,107 @@ async def deep_analysis_pro(
         return {}
 
 # =============================================================================
-# STAGE 4: GENERATION (Same as V11)
+# RAG: CHARACTER DATA LOOKUP
+# =============================================================================
+
+def lookup_character_rag(character_name: str) -> Optional[Dict]:
+    """
+    Query the Yuki Knowledge DB for character appearance data.
+    Returns costume prompts, colors, outfit structure, etc.
+    """
+    import sqlite3
+    from pathlib import Path
+    
+    db_path = Path("/app/database/yuki_knowledge.db") if Path("/app").exists() else Path("C:/Yuki_Local/database/yuki_knowledge.db")
+    
+    if not db_path.exists():
+        print(f"   ⚠️ Knowledge DB not found: {db_path}")
+        return None
+    
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Search for character by name (fuzzy match)
+        cursor.execute("""
+            SELECT c.id, c.name_romaji, c.base_prompt, c.description,
+                   av.name as variant_name, av.hair_style, av.hair_color, av.eye_color,
+                   av.skin_tone, av.outfit_structure, av.prompt_tags, av.negative_prompt,
+                   av.color_palette
+            FROM characters c
+            LEFT JOIN appearance_variants av ON c.id = av.character_id
+            WHERE c.name_romaji LIKE ? OR c.name_native LIKE ?
+            ORDER BY av.is_default DESC
+            LIMIT 1
+        """, (f"%{character_name}%", f"%{character_name}%"))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            result = dict(row)
+            # Parse JSON fields
+            import json
+            for field in ['outfit_structure', 'color_palette']:
+                if result.get(field):
+                    try:
+                        result[field] = json.loads(result[field])
+                    except:
+                        pass
+            print(f"   📚 RAG HIT: {result.get('name_romaji')} - {result.get('variant_name')}")
+            return result
+        else:
+            print(f"   ⚠️ No RAG data for: {character_name}")
+            return None
+            
+    except Exception as e:
+        print(f"   ❌ RAG lookup error: {e}")
+        return None
+
+# =============================================================================
+# STAGE 4: GENERATION WITH RAG
 # =============================================================================
 
 async def generate_image(
-
     client: genai.Client,
-
     subject_name: str,
-
     target_character: str,
-
     identity_lock: Dict,
-
-    reference_path: Path,
-
-    subject_parts: List[types.Part]
-
+    subject_parts: List[types.Part],
+    reference_path: Optional[Path] = None
 ) -> Optional[bytes]:
 
     print(f"\n{'='*60}")
-
     print(f"🎨 STAGE 4: Gemini 3 Pro Image - Generation (Target: {target_character})")
-
     print(f"{'='*60}")
+    
+    # RAG: Lookup character costume data from database
+    rag_data = lookup_character_rag(target_character)
+    
+    # Build costume description from RAG or fallback
+    if rag_data:
+        costume_desc = f"""
+CHARACTER DATABASE ENTRY:
+- Name: {rag_data.get('name_romaji', target_character)}
+- Base Prompt: {rag_data.get('base_prompt', '')}
+- Hair: {rag_data.get('hair_style', 'iconic')} ({rag_data.get('hair_color', 'signature color')})
+- Eyes: {rag_data.get('eye_color', 'characteristic')}
+- Skin: {rag_data.get('skin_tone', 'natural')}
+- Outfit: {json.dumps(rag_data.get('outfit_structure', {}), indent=2)}
+- Prompt Tags: {rag_data.get('prompt_tags', '')}
+- Color Palette: {json.dumps(rag_data.get('color_palette', {}), indent=2)}
+- AVOID: {rag_data.get('negative_prompt', '')}
+"""
+    else:
+        costume_desc = f"Generate as {target_character} with their iconic, recognizable costume."
     
     lock = identity_lock.get("identity_lock", {})
     absolute_preserve = lock.get("absolute_preserve", [])
     features = lock.get("feature_signatures", {})
     guidance = lock.get("generation_guidance", "")
     
-    generation_prompt = f"""COSPLAY GENERATION WITH V12 STRUCTURAL LOCK
+    generation_prompt = f"""COSPLAY GENERATION WITH V14 RAG + IDENTITY LOCK
 
     🔒 IDENTITY LOCK ACTIVE FOR: {subject_name}
 
@@ -339,6 +409,9 @@ async def generate_image(
 
     GENERATION GUIDANCE:
     {guidance}
+
+    🎭 CHARACTER COSTUME (FROM DATABASE):
+    {costume_desc}
 
     🎬 CINEMATIC & TECHNICAL SPECS (STRICT):
     - CAMERA: RED V-Raptor XL 8K VV.
@@ -352,23 +425,26 @@ async def generate_image(
     🎬 TASK:
     Generate a FULL BODY shot of {subject_name} as the character "{target_character}".
     - FACE: Must match {subject_name} exactly (Use Identity Lock).
-    - COSTUME: Must match the iconic outfit of "{target_character}" perfectly.
-    - THEME: Unsettling, weird, and hyper-detailed anime aesthetic.
+    - COSTUME: Must match the costume description above EXACTLY.
+    - THEME: Cinematic, powerful, hyper-detailed.
     - POSE: Standing, powerful full-body pose.
     
     Output a single high-quality 8K photorealistic vertical image.
     """
     
-    with open(reference_path, "rb") as f:
-        ref_part = types.Part.from_bytes(data=f.read(), mime_type="image/jpeg")
-    
+    # Build contents - reference image optional (RAG provides costume data)
     contents = [
         "=== SUBJECT PHOTOS ===",
         *subject_parts,
-        f"=== REFERENCE CHARACTER: {target_character} ===",
-        ref_part,
-        generation_prompt
     ]
+    
+    if reference_path and reference_path.exists():
+        with open(reference_path, "rb") as f:
+            ref_part = types.Part.from_bytes(data=f.read(), mime_type="image/jpeg")
+        contents.append(f"=== REFERENCE CHARACTER: {target_character} ===")
+        contents.append(ref_part)
+    
+    contents.append(generation_prompt)
     
     print(f"   🚀 Generating with {IMAGE_MODEL}...")
     try:
@@ -405,8 +481,8 @@ class V12Pipeline:
         subject_name: str,
         target_character: str,
         subject_dir: Path,
-        reference_path: Path,
         output_dir: Path,
+        reference_path: Optional[Path] = None,
         bypass_lock: bool = False
     ):
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -457,7 +533,7 @@ class V12Pipeline:
             print(f"\n💾 Saved identity lock: {lock_path}")
             
         # Stage 4
-        image_data = await generate_image(self.client, subject_name, target_character, identity_lock, reference_path, subject_parts)
+        image_data = await generate_image(self.client, subject_name, target_character, identity_lock, subject_parts, reference_path)
         
         if image_data:
             # --- DB & SECURE FILENAME LOGGING ---
