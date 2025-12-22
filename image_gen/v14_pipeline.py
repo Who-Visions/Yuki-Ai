@@ -120,6 +120,8 @@ class IdentityLockResponse(BaseModel):
     identity_lock: IdentityLockData
     confidence_score: float
 
+import os
+
 # =============================================================================
 # STAGE 1: CLOUD VISION API (Same as V11)
 # =============================================================================
@@ -127,7 +129,14 @@ class IdentityLockResponse(BaseModel):
 class CloudVisionAnalyzer:
     def __init__(self, cache_dir: Optional[Path] = None):
         base_dir = Path(__file__).resolve().parent.parent
-        self.cache_dir = cache_dir or (base_dir / "cache/cloud_vision")
+        
+        # Cloud Run: Use /tmp (writable)
+        if os.environ.get("K_SERVICE") or os.environ.get("IS_CLOUD"):
+             default_cache = Path("/tmp/cache/cloud_vision")
+        else:
+             default_cache = base_dir / "cache/cloud_vision"
+             
+        self.cache_dir = cache_dir or default_cache
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._client = None
     

@@ -25,7 +25,7 @@ export default function ResultScreen() {
     const { user } = useAuth();
 
     // State
-    const [prompt, setPrompt] = useState(params.prompt || 'Highly detailed 3D renders of futuristic robotic animals with glowing neon parts and cyberpunk aesthetics. Sci-fi concept art style, hard surface metallic textures, cinematic lighting, dark gradient background.');
+    const [prompt, setPrompt] = useState(params.prompt || '');
     const [negativePrompt, setNegativePrompt] = useState('blurry, low quality, distorted, extra limbs');
     const [aspectRatio, setAspectRatio] = useState('9:16');
     const [imageType, setImageType] = useState('3D');
