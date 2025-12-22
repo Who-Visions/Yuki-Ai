@@ -399,8 +399,11 @@ export default function ResultScreen() {
                                 ))}
                                 {isTyping && (
                                     <View style={styles.yukiRow}>
-                                        <View style={[styles.bubble, styles.yukiBubble]}>
-                                            <Text style={styles.yukiText}>Yuki is drafting your render... ✨</Text>
+                                        <View style={[styles.bubble, styles.yukiBubble, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+                                            <View style={styles.spinnerContainer}>
+                                                <View style={styles.spinner} />
+                                            </View>
+                                            <Text style={styles.yukiText}>Yuki is crafting your vision...</Text>
                                         </View>
                                     </View>
                                 )}
@@ -824,4 +827,35 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 24,
     },
+    spinnerContainer: {
+        width: 24,
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    spinner: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+        borderTopColor: '#FFD700',
+        borderRightColor: '#FF8C00',
+        // CSS animation for web
+        ...(Platform.OS === 'web' && {
+            animation: 'spin 1s linear infinite',
+        }),
+    },
 });
+
+// Inject CSS keyframes for web spinner animation
+if (Platform.OS === 'web') {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+}
