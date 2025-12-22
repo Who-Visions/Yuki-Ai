@@ -58,17 +58,29 @@ app.add_middleware(
 )
 
 # Configuration
-INPUT_DIR = r"C:\Yuki_Local\Inputs"
-OUTPUT_DIR = r"C:\Yuki_Local\Cosplay_Lab\Renders\Server_Output"
-SCRIPT_PATH = r"C:\Yuki_Local\image_gen\v14_pipeline.py"
-REF_DIR = r"C:\Yuki_Local\Cosplay_Lab\Subjects"
+IS_CLOUD = os.getenv("K_SERVICE") is not None  # Cloud Run sets K_SERVICE
+
+if IS_CLOUD:
+    INPUT_DIR = "/tmp/inputs"
+    OUTPUT_DIR = "/tmp/outputs"
+    SCRIPT_PATH = None  # Not used in Cloud Run
+    REF_DIR = "/tmp/subjects"
+else:
+    INPUT_DIR = r"C:\Yuki_Local\Inputs"
+    OUTPUT_DIR = r"C:\Yuki_Local\Cosplay_Lab\Renders\Server_Output"
+    SCRIPT_PATH = r"C:\Yuki_Local\image_gen\v14_pipeline.py"
+    REF_DIR = r"C:\Yuki_Local\Cosplay_Lab\Subjects"
+
 PROJECT_ID = "gifted-cooler-479623-r7"
 LOCATION = "us-central1"
 RE_ID = "projects/914641083224/locations/us-central1/reasoningEngines/8949824538980384768"
 
-# Ensure directories exist
-os.makedirs(INPUT_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# Ensure directories exist (graceful failure for Cloud Run)
+try:
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+except Exception as e:
+    logger.warning(f"Could not create directories: {e}")
 
 # Initialize Agent
 logger.info("Initializing Yuki Agent (Gemini 3)...")
