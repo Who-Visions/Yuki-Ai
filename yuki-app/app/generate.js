@@ -229,10 +229,16 @@ export default function ResultScreen() {
 
         // 🛡️ Filter history: Remove previous errors to prevent history chain-reaction crashes
         const cleanHistory = messages
-            .filter(m => !m.text.includes("Internal Error") && !m.text.includes("snag in the lab"))
+            .filter(m => m.text && !m.text.includes("Internal Error") && !m.text.includes("snag in the lab"))
             .slice(-6);
 
-        const userMsg = { id: Date.now(), text: currentPrompt, sender: 'user' };
+        // Include images in the user message for display
+        const userMsg = {
+            id: Date.now(),
+            text: currentPrompt,
+            sender: 'user',
+            images: attachedImages.length > 0 ? [...attachedImages] : undefined
+        };
         setMessages(prev => [...prev, userMsg]);
         setPrompt("");
         setIsTyping(true);
@@ -353,7 +359,15 @@ export default function ResultScreen() {
                                             styles.bubble,
                                             msg.sender === 'user' ? styles.userBubble : styles.yukiBubble
                                         ]}>
-                                            <Text style={msg.sender === 'user' ? styles.userText : styles.yukiText}>{msg.text}</Text>
+                                            {/* Show attached images */}
+                                            {msg.images && msg.images.length > 0 && (
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: msg.text ? 8 : 0 }}>
+                                                    {msg.images.map((uri, idx) => (
+                                                        <Image key={idx} source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+                                                    ))}
+                                                </View>
+                                            )}
+                                            {msg.text && <Text style={msg.sender === 'user' ? styles.userText : styles.yukiText}>{msg.text}</Text>}
                                         </View>
                                     </View>
                                 ))}
