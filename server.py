@@ -42,7 +42,9 @@ except ImportError as e:
 
 try:
     from yuki_local import YUKI_SYSTEM_PROMPT, Colors
-except ImportError:
+    logger.info("yuki_local imported successfully")
+except Exception as e:
+    logger.warning(f"Could not import yuki_local: {e}")
     YUKI_SYSTEM_PROMPT = "You are Yuki, a helpful AI assistant."
     class Colors:
         ICE_BLUE = FOX_FIRE = NEON_PINK = ERROR_RED = RESET = ""
@@ -55,7 +57,8 @@ try:
         analyze_pdf, upload_to_gcs, download_from_gcs,
     )
     tools_imports_ok = True
-except ImportError as e:
+    logger.info("yuki_tools imported successfully")
+except Exception as e:
     logger.warning(f"Could not import yuki_tools: {e}")
     # Define stub functions
     def get_current_time(): return "Tool not available"
