@@ -469,15 +469,20 @@ CHARACTER DATABASE ENTRY:
                     aspect_ratio="9:16",
                     image_size="4K"
                 ),
+                tools=[{"google_search": {}}],
                 temperature=1.0
             )
         )
         
+        final_image_data = None
         if response.candidates and response.candidates[0].content:
             for part in response.candidates[0].content.parts:
                 if hasattr(part, 'inline_data') and part.inline_data:
-                    print(f"   ✅ Image generated successfully")
-                    return part.inline_data.data
+                    final_image_data = part.inline_data.data
+        
+        if final_image_data:
+            print(f"   ✅ Image generated successfully")
+            return final_image_data
     except Exception as e:
         print(f"   ❌ Generation Error: {e}")
     
