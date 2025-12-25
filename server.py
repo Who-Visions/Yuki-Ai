@@ -312,9 +312,28 @@ async def run_generation_script(input_path: str, prompt: str, request_id: str):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
+    # Fallback to GenAI Client if Agent is not initialized (Cloud Run Mode)
     if not yuki_agent:
-        raise HTTPException(status_code=503, detail="Yuki Agent is not initialized (Check credentials/network)")
+        if not genai_client:
+            raise HTTPException(status_code=503, detail="Service Unavailable: Neither Yuki Agent nor GenAI Client initialized.")
+        
+        try:
+            logger.info(f"☁️ [Cloud Mode] Using GenAI Client for chat: {request.message}")
+            # Use Gemini 3 Flash for fast, lightweight responses in Cloud Mode
+            response = genai_client.models.generate_content(
+                model="gemini-3-flash-preview", 
+                contents=request.message,
+                config=types.GenerateContentConfig(
+                    system_instruction=YUKI_SYSTEM_PROMPT,
+                    temperature=0.7
+                )
+            )
+            return ChatResponse(response=response.text)
+        except Exception as e:
+            logger.error(f"GenAI Fallback failed: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
     
+    # Standard Local/Full Agent Mode
     try:
         logger.info(f"Received chat message: {request.message}")
         
@@ -702,8 +721,7 @@ def health_check():
 def debug_info():
     return {
         "reasoning_engine": RE_ID,
-        "location": LOCATION,
-        "model_default": "gemini-1.5-flash"
+        "model_default": "gemini-3-flash-preview"
     }
 
 @app.get("/v1/user/images")
