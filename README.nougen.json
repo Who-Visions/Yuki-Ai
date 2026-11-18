@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Who-Visions/NouGenShards/main/schemas/readme-manifest.schema.json",
+  "schema_version": 1,
+  "project": {
+    "title": "Yuki Agent v0.05",
+    "description": "A Vertex AI Reasoning Engine agent powered by Gemini 3 Pro.",
+    "emoji": "🦊"
+  },
+  "table_of_contents": true,
+  "sections": [
+    {
+      "title": "Quick Start",
+      "content": "### Local Testing (No Deployment)\n\n```bash\n# Windows\nactivate_yuki.bat\npython run_yuki.py\n\n# Or directly\npython -m venv venv\nvenv\\Scripts\\activate\npip install -r requirements.txt\npython run_yuki.py\n```\n\n### Deploy to Vertex AI\n\n⚠️ **Warning:** Only run this when you actually want to deploy a new version!\n\n```bash\npython deploy_yuki.py\n```",
+      "emoji": "🚀"
+    },
+    {
+      "title": "Files",
+      "content": "- **`deploy_yuki.py`** - Main deployment script (deploys to Vertex AI)\n- **`run_yuki.py`** - Test runner (no deployment, interactive)\n- **`test_yuki_final.py`** - Quick verification test\n- **`activate_yuki.bat`** - Activate venv with helper info\n- **`tools.py`** - Tool definitions (get_current_time, add_numbers)\n- **`DEPLOYMENT_YUKI.md`** - Complete deployment guide\n- **`DEPLOYMENT_LOG.md`** - Full session history and learnings",
+      "emoji": "📋"
+    },
+    {
+      "title": "Current Deployment",
+      "content": "**Resource Name:**\n```\nprojects/914641083224/locations/us-central1/reasoningEngines/2780528567203659776\n```\n\n**Deployed:** 2025-12-01 08:01:43\n**Model:** gemini-3-pro-preview\n**Location:** us-central1 (with global routing for Gemini 3)",
+      "emoji": "🎯"
+    },
+    {
+      "title": "Test Example",
+      "content": "```python\nimport vertexai\nfrom vertexai.preview import reasoning_engines\n\nvertexai.init(project=\"gifted-cooler-479623-r7\", location=\"us-central1\")\n\nagent = reasoning_engines.ReasoningEngine(\n    \"projects/914641083224/locations/us-central1/reasoningEngines/2780528567203659776\"\n)\n\nresponse = agent.query(user_instruction=\"What time is it?\")\nprint(response)\n# {'output': 'The current time is 2025-12-01 12:47:08 UTC.'}\n```",
+      "emoji": "🧪"
+    },
+    {
+      "title": "Documentation",
+      "content": "See **DEPLOYMENT_YUKI.md** for:\n- Architecture details\n- Configuration guide\n- Deployment steps\n- Troubleshooting",
+      "emoji": "📚"
+    },
+    {
+      "title": "About Yuki",
+      "content": "Yuki is a sophisticated AI agent designed to serve as the \"Cosplay Preview Architect\" for the Nano Banana 3.0 render pipeline. She acts as an intelligent interface between user selfies and the cosplay rendering system, using advanced reasoning capabilities to guide the preview generation process.\n\n**Key Features:**\n- ✅ Gemini 3 Pro intelligence\n- ✅ Dynamic global routing for model access\n- ✅ Tool integration ready\n- ✅ Production-ready error handling\n- ✅ Lazy initialization for deployed environments",
+      "emoji": "🦊"
+    }
+  ],
+  "links": [
+    {
+      "label": "Deployment guide (DEPLOYMENT_YUKI.md)",
+      "url": "https://github.com/Who-Visions/Yuki-Ai/blob/main/DEPLOYMENT_YUKI.md"
+    },
+    {
+      "label": "Source Repository",
+      "url": "https://github.com/Who-Visions/Yuki-Ai"
+    }
+  ],
+  "footer": "Built with 🤍 by Who Visions LLC"
+}
