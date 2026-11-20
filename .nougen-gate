@@ -1,0 +1,4 @@
+# Local gate stages (~/.nougen/bin/local_gate.sh), one command per line, run from the repo root.
+# Default pytest collects ~25 live-service scripts (Vertex AI, Gemini, network) that need credentials
+# and cannot run in a gate. Until real unit tests exist, every Python file must at least compile.
+python3 -m compileall -q -x '(^|/)(\.venv|venv|node_modules|\.git|yuki-app)/' .
